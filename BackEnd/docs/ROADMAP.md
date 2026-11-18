@@ -52,7 +52,7 @@ No SDD, **a spec vem antes do código**. Cada funcionalidade tem uma spec com re
 | 0    | SPEC-00 | Fundação (schema, estrutura, seed) | A + B     | —               | ✅     |
 | 1    | SPEC-01 | Ingestão do XML e triagem          | A         | 00              | ⬜     |
 | 1    | SPEC-02 | Tickets e Painel Central           | A         | 00              | ⬜     |
-| 1    | SPEC-06 | Portaria (entrada)                 | B         | 00              | ⬜     |
+| 1    | SPEC-06 | Portaria (entrada)                 | B         | 00              | ✅     |
 | 1    | SPEC-07 | Análise de risco (simulada)        | B         | 06              | ⬜     |
 | 1    | SPEC-09 | Docas e fila                       | B         | 00              | ⬜     |
 | 2    | SPEC-03 | Romaneio                           | A         | 01, 02          | ⬜     |
@@ -286,7 +286,7 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 ---
 
-### SPEC-06 — Portaria (entrada) ⬜
+### SPEC-06 — Portaria (entrada) ✅
 
 **Dono:** B · **Fase:** 1 · **Raia:** 4
 
@@ -314,10 +314,10 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 **Tarefas**
 
-- [ ] Entrada com consulta por placa
-- [ ] Bloqueio por placa sem ticket
-- [ ] Carreta / só cavalo
-- [ ] Condutor + chamada da análise de risco
+- [x] Entrada com consulta por placa
+- [x] Bloqueio por placa sem ticket
+- [x] Carreta / só cavalo
+- [x] Condutor + chamada da análise de risco
 
 ---
 
