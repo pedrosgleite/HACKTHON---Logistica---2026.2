@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemplo FICTICIO para testes da triagem (TRANSFERENCIA: mesma raiz de CNPJ, filial -> CD = RECEBIMENTO, frota PROPRIA) -->
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe>
+    <infNFe Id="NFe35261111222333000262550010000030031000030030" versao="4.00">
+      <ide>
+        <cUF>35</cUF>
+        <natOp>Transferencia entre filiais</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>3003</nNF>
+        <dhEmi>2026-11-18T08:00:00-03:00</dhEmi>
+        <tpNF>1</tpNF>
+      </ide>
+      <emit>
+        <CNPJ>11222333000262</CNPJ>
+        <xNome>ARGOS Filial Campinas LTDA</xNome>
+        <enderEmit><xMun>Campinas</xMun><UF>SP</UF></enderEmit>
+      </emit>
+      <dest>
+        <CNPJ>11222333000181</CNPJ>
+        <xNome>ARGOS Centro de Distribuicao LTDA</xNome>
+        <enderDest><xMun>Sao Paulo</xMun><UF>SP</UF></enderDest>
+      </dest>
+      <det nItem="1">
+        <prod>
+          <cProd>P001</cProd>
+          <xProd>Arroz tipo 1 5kg</xProd>
+          <CFOP>5152</CFOP>
+          <uCom>CX</uCom>
+          <qCom>80.0000</qCom>
+          <vProd>12000.00</vProd>
+        </prod>
+      </det>
+      <total><ICMSTot><vNF>12000.00</vNF></ICMSTot></total>
+      <transp>
+        <modFrete>0</modFrete>
+        <transporta>
+          <CNPJ>11222333000262</CNPJ>
+          <xNome>ARGOS Filial Campinas LTDA</xNome>
+        </transporta>
+        <veicTransp>
+          <placa>ABC2E34</placa>
+          <UF>SP</UF>
+        </veicTransp>
+        <vol>
+          <qVol>80</qVol>
+          <esp>CAIXA</esp>
+          <pesoL>400</pesoL>
+          <pesoB>420.000</pesoB>
+        </vol>
+      </transp>
+    </infNFe>
+  </NFe>
+</nfeProc>

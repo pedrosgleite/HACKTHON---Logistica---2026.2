@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemplo FICTICIO para testes da triagem (COLETA: CD emitente, frota PROPRIA) -->
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe>
+    <infNFe Id="NFe35261111222333000181550010000010011000010010" versao="4.00">
+      <ide>
+        <cUF>35</cUF>
+        <natOp>Venda de mercadoria</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>1001</nNF>
+        <dhEmi>2026-11-18T08:00:00-03:00</dhEmi>
+        <tpNF>1</tpNF>
+      </ide>
+      <emit>
+        <CNPJ>11222333000181</CNPJ>
+        <xNome>ARGOS Centro de Distribuicao LTDA</xNome>
+        <enderEmit><xMun>Sao Paulo</xMun><UF>SP</UF></enderEmit>
+      </emit>
+      <dest>
+        <CNPJ>44555666000177</CNPJ>
+        <xNome>Mercado Bom Preco SA</xNome>
+        <enderDest><xMun>Santos</xMun><UF>SP</UF></enderDest>
+      </dest>
+      <det nItem="1">
+        <prod>
+          <cProd>P001</cProd>
+          <xProd>Arroz tipo 1 5kg</xProd>
+          <CFOP>5102</CFOP>
+          <uCom>CX</uCom>
+          <qCom>120.0000</qCom>
+          <vProd>18000.00</vProd>
+        </prod>
+      </det>
+      <total><ICMSTot><vNF>18000.00</vNF></ICMSTot></total>
+      <transp>
+        <modFrete>0</modFrete>
+        <transporta>
+          <CNPJ>11222333000181</CNPJ>
+          <xNome>ARGOS Centro de Distribuicao LTDA</xNome>
+        </transporta>
+        <veicTransp>
+          <placa>ABC1D23</placa>
+          <UF>SP</UF>
+        </veicTransp>
+        <vol>
+          <qVol>120</qVol>
+          <esp>CAIXA</esp>
+          <pesoL>600</pesoL>
+          <pesoB>630.000</pesoB>
+        </vol>
+      </transp>
+    </infNFe>
+  </NFe>
+</nfeProc>

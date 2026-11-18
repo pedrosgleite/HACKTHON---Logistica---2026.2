@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemplo FICTICIO para testes da triagem (RECEBIMENTO: CD destinatario, frota TERCEIRA) -->
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe>
+    <infNFe Id="NFe35261177888999000155550010000020021000020020" versao="4.00">
+      <ide>
+        <cUF>35</cUF>
+        <natOp>Venda de mercadoria</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>2002</nNF>
+        <dhEmi>2026-11-18T08:00:00-03:00</dhEmi>
+        <tpNF>1</tpNF>
+      </ide>
+      <emit>
+        <CNPJ>77888999000155</CNPJ>
+        <xNome>Industria Alimentos Vale LTDA</xNome>
+        <enderEmit><xMun>Jundiai</xMun><UF>SP</UF></enderEmit>
+      </emit>
+      <dest>
+        <CNPJ>11222333000181</CNPJ>
+        <xNome>ARGOS Centro de Distribuicao LTDA</xNome>
+        <enderDest><xMun>Sao Paulo</xMun><UF>SP</UF></enderDest>
+      </dest>
+      <det nItem="1">
+        <prod>
+          <cProd>F010</cProd>
+          <xProd>Feijao carioca 1kg</xProd>
+          <CFOP>5102</CFOP>
+          <uCom>CX</uCom>
+          <qCom>300.0000</qCom>
+          <vProd>24000.00</vProd>
+        </prod>
+      </det>
+      <total><ICMSTot><vNF>24000.00</vNF></ICMSTot></total>
+      <transp>
+        <modFrete>0</modFrete>
+        <transporta>
+          <CNPJ>55666777000144</CNPJ>
+          <xNome>Transportes Rapido Sul LTDA</xNome>
+        </transporta>
+        <veicTransp>
+          <placa>TER3F45</placa>
+          <UF>SP</UF>
+        </veicTransp>
+        <vol>
+          <qVol>300</qVol>
+          <esp>CAIXA</esp>
+          <pesoL>300</pesoL>
+          <pesoB>315.000</pesoB>
+        </vol>
+      </transp>
+    </infNFe>
+  </NFe>
+</nfeProc>

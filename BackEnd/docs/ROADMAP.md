@@ -49,7 +49,7 @@ No SDD, **a spec vem antes do código**. Cada funcionalidade tem uma spec com re
 
 | Fase | Spec    | Título                             | Dono      | Depende de      | Status |
 | ---- | ------- | ---------------------------------- | --------- | --------------- | ------ |
-| 0    | SPEC-00 | Fundação (schema, estrutura, seed) | A + B     | —               | ⬜     |
+| 0    | SPEC-00 | Fundação (schema, estrutura, seed) | A + B     | —               | 🟦     |
 | 1    | SPEC-01 | Ingestão do XML e triagem          | A         | 00              | ⬜     |
 | 1    | SPEC-02 | Tickets e Painel Central           | A         | 00              | ⬜     |
 | 1    | SPEC-06 | Portaria (entrada)                 | B         | 00              | ⬜     |
@@ -92,7 +92,7 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 ## 5. Specs
 
-### SPEC-00 — Fundação ⬜
+### SPEC-00 — Fundação 🟦
 
 **Dono:** A + B · **Fase:** 0
 
@@ -108,15 +108,15 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 **Tarefas**
 
-- [ ] Criar projeto Node + TS + framework HTTP + Zod
-- [ ] Configurar Prisma + Neon (`DATABASE_URL` e `DIRECT_URL`)
+- [x] Criar projeto Node + TS + framework HTTP + Zod
+- [x] Configurar Prisma + Neon (`DATABASE_URL` e `DIRECT_URL`)
 - [ ] Escrever `schema.prisma` (juntos) e rodar a primeira migration
-- [ ] Estrutura de pastas (`modules/`, `integrations/`, `shared/`)
-- [ ] Handler de erro padrão + Swagger
-- [ ] Combinar e criar os **stubs** dos contratos C1–C5
-- [ ] Seed com dados de teste
-- [ ] README com como rodar
-- [ ] 2–3 XMLs de exemplo em `scripts/xml/` (coleta, recebimento, transferência)
+- [x] Estrutura de pastas (`modules/`, `integrations/`, `shared/`)
+- [x] Handler de erro padrão + Swagger
+- [x] Combinar e criar os **stubs** dos contratos C1–C5 (`src/shared/contratos`)
+- [ ] Seed com dados de teste (script pronto em `scripts/seed.ts`; falta rodar após a migration)
+- [x] README com como rodar
+- [x] 2–3 XMLs de exemplo em `scripts/xml/` (coleta, recebimento, transferência)
 
 ---
 

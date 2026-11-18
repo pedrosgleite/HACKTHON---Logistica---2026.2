@@ -23,9 +23,17 @@ Preencha também `PORT` (padrão 3333) e `EMPRESA_CNPJ`.
 ## Rodar
 ```powershell
 npm run db:migrate   # aplica migrations (quando houver models)
+npm run db:seed      # popula docas, veículos, motoristas e clientes de teste
 npm run dev          # servidor em modo watch
 ```
-Teste: `GET http://localhost:3333/health` → `{ "status": "ok" }`
+Teste: `GET http://localhost:3333/health` → `{ "status": "ok" }` · Swagger: http://localhost:3333/docs
+
+## Onde está o quê
+- `src/shared/contratos/` — stubs dos contratos C1–C5 entre os devs (ROADMAP §4)
+- `src/shared/errors.ts` — `AppError` e handler no formato `{ erro, detalhes }`
+- `src/shared/swagger.ts` — documento OpenAPI (cada módulo adiciona suas rotas)
+- `scripts/seed.ts` + `scripts/seed-data.ts` — dados de teste
+- `scripts/xml/` — NF-e de exemplo: coleta, recebimento e transferência (CNPJ do CD: `11222333000181`)
 
 ## Scripts
 | Script | O que faz |
@@ -35,3 +43,4 @@ Teste: `GET http://localhost:3333/health` → `{ "status": "ok" }`
 | `db:migrate` | `prisma migrate dev` |
 | `db:studio` | `prisma studio` |
 | `db:generate` | `prisma generate` |
+| `db:seed` | `tsx scripts/seed.ts` |
