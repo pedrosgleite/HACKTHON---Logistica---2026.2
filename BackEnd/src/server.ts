@@ -6,6 +6,7 @@ import { errorHandler, notFoundHandler } from "./shared/errors";
 import { openapi } from "./shared/swagger";
 import { nfeRouter } from "./modules/nfe/nfe.routes";
 import { portariaRouter } from "./modules/portaria/portaria.routes";
+import { romaneiosRouter } from "./modules/romaneios/romaneios.routes";
 import { painelRouter, ticketsRouter } from "./modules/tickets/tickets.routes";
 
 const app = express();
@@ -21,6 +22,7 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapi));
 app.use("/nfe", nfeRouter);
 app.use("/tickets", ticketsRouter);
 app.use("/painel", painelRouter);
+app.use("/romaneios", romaneiosRouter);
 app.use("/portaria", portariaRouter);
 
 app.use(notFoundHandler);

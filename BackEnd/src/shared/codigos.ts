@@ -15,6 +15,18 @@ export async function proximoCodigoTicket(db: Db = prisma): Promise<string> {
   return `${prefixo}${String(seq).padStart(5, "0")}`;
 }
 
+/** Próximo código legível do romaneio: ROM-2026-00001 (PROJETO.md §8). */
+export async function proximoCodigoRomaneio(db: Db = prisma): Promise<string> {
+  const prefixo = `ROM-${new Date().getFullYear()}-`;
+  const ultimo = await db.romaneio.findFirst({
+    where: { codigo: { startsWith: prefixo } },
+    orderBy: { codigo: "desc" },
+    select: { codigo: true },
+  });
+  const seq = ultimo ? Number(ultimo.codigo.slice(prefixo.length)) + 1 : 1;
+  return `${prefixo}${String(seq).padStart(5, "0")}`;
+}
+
 /** true se o erro é violação de unique no campo informado (ex.: "codigo", "chave"). */
 export function violouUnique(e: unknown, campo: string): boolean {
   if (!(e instanceof Prisma.PrismaClientKnownRequestError) || e.code !== "P2002") return false;

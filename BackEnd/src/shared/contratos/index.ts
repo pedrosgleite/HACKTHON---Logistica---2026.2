@@ -28,10 +28,17 @@ export async function alocarDoca(ticketId: string): Promise<ResultadoAlocacaoDoc
   return { posicaoFila: 1 };
 }
 
-/** C2 — true se todos os romaneios do ticket estão LIBERADO ou FINALIZADO. */
-export async function romaneioLiberado(ticketId: string): Promise<boolean> {
-  console.warn(`[STUB C2] romaneioLiberado(${ticketId})`);
-  return true;
+/**
+ * C2 — true só se o ticket TEM romaneio e todos estão LIBERADO ou FINALIZADO. IMPLEMENTADO (Dev A, SPEC-03).
+ * Ticket sem nenhum romaneio → false (não pode sair sem romaneio).
+ * `db` é opcional: passe o `tx` quando estiver dentro de uma transação.
+ */
+export async function romaneioLiberado(
+  ticketId: string,
+  db: Prisma.TransactionClient | typeof prisma = prisma,
+): Promise<boolean> {
+  const romaneios = await db.romaneio.findMany({ where: { ticketId }, select: { status: true } });
+  return romaneios.length > 0 && romaneios.every((r) => r.status === "LIBERADO" || r.status === "FINALIZADO");
 }
 
 /** C3 — Envia (simulado) o link do motorista e devolve o token de acesso. */

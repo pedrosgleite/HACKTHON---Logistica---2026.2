@@ -131,6 +131,83 @@ export const openapi = {
         responses: { 200: { description: "OK" } },
       },
     },
+    "/romaneios": {
+      post: {
+        tags: ["Romaneios"],
+        summary: "Cria romaneio a partir do ticket (notas livres) ou de uma lista de notas do mesmo ticket",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { type: "object", properties: { ticketId: { type: "string" }, notaIds: { type: "array", items: { type: "string" } } } },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Criado EM_MONTAGEM com totais de volumes e peso" },
+          404: { description: "Ticket ou nota não encontrado" },
+          409: { description: "Nota já está em outro romaneio" },
+          422: { description: "Sem notas livres, notas de tickets diferentes ou ticket encerrado" },
+        },
+      },
+    },
+    "/romaneios/{id}": {
+      get: {
+        tags: ["Romaneios"],
+        summary: "Detalhe com notas, entregas e ocorrências",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "OK" }, 404: { description: "Romaneio não encontrado" } },
+      },
+    },
+    "/romaneios/{id}/notas": {
+      post: {
+        tags: ["Romaneios"],
+        summary: "Adiciona notas (só EM_MONTAGEM)",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["notaIds"], properties: { notaIds: { type: "array", items: { type: "string" } } } } } },
+        },
+        responses: { 200: { description: "Notas adicionadas e totais recalculados" }, 409: { description: "Nota em outro romaneio" }, 422: { description: "Romaneio fora de montagem ou nota de outro ticket" } },
+      },
+    },
+    "/romaneios/{id}/conferir": {
+      post: {
+        tags: ["Romaneios"],
+        summary: "Confere volumes por nota",
+        description: "Volumes iguais → CONFERIDO. Divergência → gera ocorrência DIVERGENCIA; só confere com aceitarDivergencia=true (senão 422).",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["itens"],
+                properties: {
+                  itens: {
+                    type: "array",
+                    items: { type: "object", required: ["notaFiscalId", "volumes"], properties: { notaFiscalId: { type: "string" }, volumes: { type: "integer" } } },
+                  },
+                  pesoConferido: { type: "number" },
+                  aceitarDivergencia: { type: "boolean", default: false },
+                  observacao: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: { 200: { description: "CONFERIDO" }, 422: { description: "Divergência não aceita, nota faltando ou romaneio fora de montagem" } },
+      },
+    },
+    "/romaneios/{id}/liberar": {
+      post: {
+        tags: ["Romaneios"],
+        summary: "Libera o romaneio e gera uma entrega por nota",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "LIBERADO com entregas PROGRAMADA" }, 422: { description: "Romaneio não conferido" } },
+      },
+    },
     "/portaria/entrada": {
       post: {
         tags: ["Portaria"],

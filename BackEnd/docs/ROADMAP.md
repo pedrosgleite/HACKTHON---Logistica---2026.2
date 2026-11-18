@@ -55,7 +55,7 @@ No SDD, **a spec vem antes do código**. Cada funcionalidade tem uma spec com re
 | 1    | SPEC-06 | Portaria (entrada)                 | B         | 00              | ✅     |
 | 1    | SPEC-07 | Análise de risco (simulada)        | B         | 06              | ⬜     |
 | 1    | SPEC-09 | Docas e fila                       | B         | 00              | ⬜     |
-| 2    | SPEC-03 | Romaneio                           | A         | 01, 02          | ⬜     |
+| 2    | SPEC-03 | Romaneio                           | A         | 01, 02          | ✅     |
 | 2    | SPEC-05 | Rastreio, ETA e cerca eletrônica   | A         | 02              | ⬜     |
 | 2    | SPEC-08 | Notificações e link do motorista   | B         | 07, 09          | ⬜     |
 | 3    | SPEC-04 | Entregas e encerramento            | A         | 03              | ⬜     |
@@ -188,7 +188,7 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 ---
 
-### SPEC-03 — Romaneio ⬜
+### SPEC-03 — Romaneio ✅
 
 **Dono:** A · **Fase:** 2
 
@@ -216,10 +216,10 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 **Tarefas**
 
-- [ ] Criação + totais
-- [ ] Conferência com divergência
-- [ ] Liberação + geração de entregas
-- [ ] Implementar **C2** (substituir o stub)
+- [x] Criação + totais
+- [x] Conferência com divergência
+- [x] Liberação + geração de entregas
+- [x] Implementar **C2** (substituir o stub)
 
 ---
 
