@@ -4,7 +4,9 @@ import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import { errorHandler, notFoundHandler } from "./shared/errors";
 import { openapi } from "./shared/swagger";
+import { nfeRouter } from "./modules/nfe/nfe.routes";
 import { portariaRouter } from "./modules/portaria/portaria.routes";
+import { painelRouter, ticketsRouter } from "./modules/tickets/tickets.routes";
 
 const app = express();
 
@@ -16,6 +18,9 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapi));
+app.use("/nfe", nfeRouter);
+app.use("/tickets", ticketsRouter);
+app.use("/painel", painelRouter);
 app.use("/portaria", portariaRouter);
 
 app.use(notFoundHandler);

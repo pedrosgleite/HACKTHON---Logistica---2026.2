@@ -22,10 +22,20 @@ Preencha também `PORT` (padrão 3333) e `EMPRESA_CNPJ`.
 
 ## Rodar
 ```powershell
-npm run db:migrate   # aplica migrations (quando houver models)
-npm run db:seed      # popula docas, veículos, motoristas e clientes de teste
+npx prisma generate  # gera o Prisma Client local a partir do schema
 npm run dev          # servidor em modo watch
 ```
+O banco (Neon) é **compartilhado** e já tem as migrations e o seed aplicados — não precisa rodar `db:migrate` nem `db:seed` para começar.
+
+## ⚠️ Depois de todo `git pull`: `npx prisma generate`
+O banco é um só, na nuvem, mas o **Prisma Client** (os tipos/funções `prisma.ticket`, `prisma.doca`…) é gerado **na sua máquina**, dentro de `node_modules`, a partir do `schema.prisma`.
+Se alguém mudou o schema e você não regenerou, o código não compila (`Property 'ticket' does not exist…`) mesmo com as tabelas já existindo no Neon.
+
+| Situação | Comando |
+|---|---|
+| Puxei mudanças do `schema.prisma` | `npx prisma generate` (ou `npm install`, que roda o generate no `postinstall`) |
+| **Eu** alterei o `schema.prisma` | `npm run db:migrate` — cria a migration, aplica no Neon e gera o client. Basta **uma pessoa** rodar; depois é só commitar a pasta `prisma/migrations` |
+| Banco novo/zerado | `npm run db:migrate` e `npm run db:seed` |
 Teste: `GET http://localhost:3333/health` → `{ "status": "ok" }` · Swagger: http://localhost:3333/docs
 
 ## Onde está o quê

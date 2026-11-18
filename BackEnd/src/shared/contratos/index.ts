@@ -11,6 +11,11 @@
  * | C5 | A          | A + B | SPEC-02                   |
  */
 
+import type { Prisma, TicketStatus } from "@prisma/client";
+import { prisma } from "../prisma";
+import { AppError } from "../errors";
+import { proximosStatus, transicaoPermitida } from "../../modules/tickets/tickets.transicoes";
+
 export interface ResultadoAlocacaoDoca {
   docaId?: string;
   numeroDoca?: number;
@@ -35,20 +40,51 @@ export async function enviarLinkMotorista(ticketId: string, telefone: string): P
   return { token: `stub-${ticketId}` };
 }
 
-/** C4 — Grava um EventoTicket na linha do tempo. */
+/**
+ * C4 — Grava um EventoTicket na linha do tempo. IMPLEMENTADO (Dev A).
+ * `db` é opcional: passe o `tx` quando estiver dentro de uma transação.
+ */
 export async function registrarEvento(
   ticketId: string,
   tipo: string,
   descricao: string,
   dados?: Record<string, unknown>,
+  db: Prisma.TransactionClient | typeof prisma = prisma,
 ): Promise<void> {
-  console.warn(`[STUB C4] registrarEvento(${ticketId}, ${tipo}, ${descricao})`, dados ?? "");
+  await db.eventoTicket.create({
+    data: { ticketId, tipo, descricao, dados: dados as Prisma.InputJsonValue | undefined },
+  });
 }
 
 /**
- * C5 — Muda o status do ticket validando a tabela de transições.
- * `novoStatus` é string até o enum de status existir no schema; troque pelo tipo do Prisma depois.
+ * C5 — Muda o status do ticket validando a tabela de transições
+ * (src/modules/tickets/tickets.transicoes.ts). IMPLEMENTADO (Dev A).
+ * - 404 se o ticket não existe; 422 se a transição não é permitida.
+ * - Mesmo status = nada muda (idempotente).
+ * - Grava o evento STATUS_ALTERADO na linha do tempo.
+ * `db` é opcional: passe o `tx` quando estiver dentro de uma transação.
  */
-export async function atualizarStatusTicket(ticketId: string, novoStatus: string): Promise<void> {
-  console.warn(`[STUB C5] atualizarStatusTicket(${ticketId}, ${novoStatus})`);
+export async function atualizarStatusTicket(
+  ticketId: string,
+  novoStatus: TicketStatus,
+  db: Prisma.TransactionClient | typeof prisma = prisma,
+  motivo?: string,
+): Promise<{ de: TicketStatus; para: TicketStatus }> {
+  const ticket = await db.ticket.findUnique({ where: { id: ticketId }, select: { status: true } });
+  if (!ticket) throw new AppError("Ticket não encontrado", 404, { ticketId });
+
+  const de = ticket.status;
+  if (de === novoStatus) return { de, para: novoStatus };
+
+  if (!transicaoPermitida(de, novoStatus)) {
+    throw new AppError(`Transição de status inválida: ${de} → ${novoStatus}`, 422, {
+      de,
+      para: novoStatus,
+      permitidos: proximosStatus(de),
+    });
+  }
+
+  await db.ticket.update({ where: { id: ticketId }, data: { status: novoStatus } });
+  await registrarEvento(ticketId, "STATUS_ALTERADO", `${de} → ${novoStatus}${motivo ? ` (${motivo})` : ""}`, { de, para: novoStatus, motivo }, db);
+  return { de, para: novoStatus };
 }

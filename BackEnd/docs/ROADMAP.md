@@ -50,8 +50,8 @@ No SDD, **a spec vem antes do código**. Cada funcionalidade tem uma spec com re
 | Fase | Spec    | Título                             | Dono      | Depende de      | Status |
 | ---- | ------- | ---------------------------------- | --------- | --------------- | ------ |
 | 0    | SPEC-00 | Fundação (schema, estrutura, seed) | A + B     | —               | ✅     |
-| 1    | SPEC-01 | Ingestão do XML e triagem          | A         | 00              | ⬜     |
-| 1    | SPEC-02 | Tickets e Painel Central           | A         | 00              | ⬜     |
+| 1    | SPEC-01 | Ingestão do XML e triagem          | A         | 00              | ✅     |
+| 1    | SPEC-02 | Tickets e Painel Central           | A         | 00              | ✅     |
 | 1    | SPEC-06 | Portaria (entrada)                 | B         | 00              | ✅     |
 | 1    | SPEC-07 | Análise de risco (simulada)        | B         | 06              | ⬜     |
 | 1    | SPEC-09 | Docas e fila                       | B         | 00              | ⬜     |
@@ -120,7 +120,7 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 ---
 
-### SPEC-01 — Ingestão do XML e triagem ⬜
+### SPEC-01 — Ingestão do XML e triagem ✅
 
 **Dono:** A · **Fase:** 1 · **Raia:** 1
 
@@ -145,17 +145,17 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 **Tarefas**
 
-- [ ] Parser do XML (`fast-xml-parser`) → objeto tipado
-- [ ] Serviço de triagem (funções puras, fáceis de testar)
-- [ ] Upsert de clientes (emitente/destinatário)
-- [ ] Criar nota + ticket + evento `TICKET_CRIADO`
-- [ ] Testar com os 3 XMLs de exemplo
+- [x] Parser do XML (`fast-xml-parser`) → objeto tipado
+- [x] Serviço de triagem (funções puras, fáceis de testar)
+- [x] Upsert de clientes (emitente/destinatário)
+- [x] Criar nota + ticket + evento `TICKET_CRIADO`
+- [x] Testar com os 3 XMLs de exemplo (fictícios; repetir quando chegarem os XMLs reais)
 
 ⏸️ **Pendente com o time:** várias notas da mesma placa viram 1 ticket ou vários? (Por enquanto: **1 nota = 1 ticket**, com opção de anexar a um ticket existente via `ticketId`.)
 
 ---
 
-### SPEC-02 — Tickets e Painel Central ⬜
+### SPEC-02 — Tickets e Painel Central ✅
 
 **Dono:** A · **Fase:** 1 · **Raia:** 2
 
@@ -181,10 +181,10 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 **Tarefas**
 
-- [ ] CRUD do ticket manual
-- [ ] Implementar **C4** (`registrarEvento`) e **C5** (`atualizarStatusTicket` com tabela de transições)
-- [ ] Endpoint de detalhe com includes
-- [ ] Endpoint `/painel`
+- [x] CRUD do ticket manual
+- [x] Implementar **C4** (`registrarEvento`) e **C5** (`atualizarStatusTicket` com tabela de transições em `src/modules/tickets/tickets.transicoes.ts`)
+- [x] Endpoint de detalhe com includes
+- [x] Endpoint `/painel`
 
 ---
 
