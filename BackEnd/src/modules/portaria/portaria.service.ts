@@ -201,7 +201,7 @@ export async function informarCondutor(acessoId: string, input: CondutorInput) {
     throw new AppError("O acesso não pode receber condutor neste status", 422, { status: acesso.status });
   }
 
-  const telefone = `+55${input.telefone}`;
+  const telefone = input.telefone.startsWith("55") ? `+${input.telefone}` : `+55${input.telefone}`;
   const motorista = await prisma.motorista.upsert({
     where: { cpf: input.cpf },
     update: { nome: input.nome, telefone },
