@@ -49,7 +49,7 @@ No SDD, **a spec vem antes do código**. Cada funcionalidade tem uma spec com re
 
 | Fase | Spec    | Título                             | Dono      | Depende de      | Status |
 | ---- | ------- | ---------------------------------- | --------- | --------------- | ------ |
-| 0    | SPEC-00 | Fundação (schema, estrutura, seed) | A + B     | —               | 🟦     |
+| 0    | SPEC-00 | Fundação (schema, estrutura, seed) | A + B     | —               | ✅     |
 | 1    | SPEC-01 | Ingestão do XML e triagem          | A         | 00              | ⬜     |
 | 1    | SPEC-02 | Tickets e Painel Central           | A         | 00              | ⬜     |
 | 1    | SPEC-06 | Portaria (entrada)                 | B         | 00              | ⬜     |
@@ -110,11 +110,11 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 - [x] Criar projeto Node + TS + framework HTTP + Zod
 - [x] Configurar Prisma + Neon (`DATABASE_URL` e `DIRECT_URL`)
-- [ ] Escrever `schema.prisma` (juntos) e rodar a primeira migration
+- [x] Escrever `schema.prisma` (juntos) e rodar a primeira migration
 - [x] Estrutura de pastas (`modules/`, `integrations/`, `shared/`)
 - [x] Handler de erro padrão + Swagger
 - [x] Combinar e criar os **stubs** dos contratos C1–C5 (`src/shared/contratos`)
-- [ ] Seed com dados de teste (script pronto em `scripts/seed.ts`; falta rodar após a migration)
+- [x] Seed com dados de teste (script pronto em `scripts/seed.ts`; rodado após a primeira migration)
 - [x] README com como rodar
 - [x] 2–3 XMLs de exemplo em `scripts/xml/` (coleta, recebimento, transferência)
 
