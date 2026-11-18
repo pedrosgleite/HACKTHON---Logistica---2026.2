@@ -39,7 +39,8 @@ Se alguém mudou o schema e você não regenerou, o código não compila (`Prope
 Teste: `GET http://localhost:3333/health` → `{ "status": "ok" }` · Swagger: http://localhost:3333/docs
 
 ## Onde está o quê
-- `src/shared/contratos/` — stubs dos contratos C1–C5 entre os devs (ROADMAP §4)
+- `src/shared/contratos/` — contratos C1–C5 entre os devs (ROADMAP §4). C2, C4 e C5 implementados; C1 e C3 ainda stubs (Dev B)
+- `src/shared/saida.ts` — `registrarSaida()` **provisória** (SPEC-10 é do Dev B), já usada pela cerca
 - `src/shared/errors.ts` — `AppError` e handler no formato `{ erro, detalhes }`
 - `src/shared/swagger.ts` — documento OpenAPI (cada módulo adiciona suas rotas)
 - `scripts/seed.ts` + `scripts/seed-data.ts` — dados de teste
@@ -54,3 +55,12 @@ Teste: `GET http://localhost:3333/health` → `{ "status": "ok" }` · Swagger: h
 | `db:studio` | `prisma studio` |
 | `db:generate` | `prisma generate` |
 | `db:seed` | `tsx scripts/seed.ts` |
+| `simular:rastreio` | simulador do rastreador (ver abaixo) |
+
+## Simular o rastreio (SPEC-05)
+Com o servidor rodando, envia posições de um veículo **da frota própria** se aproximando do CD até entrar na cerca:
+```powershell
+npm run simular:rastreio -- ABC1D23 --km=5 --passos=8 --intervalo=500   # --sair simula a saída da cerca
+```
+A placa precisa ter um ticket aberto (ex.: importe `scripts/xml/coleta.xml` antes).
+Variáveis opcionais no `.env` (padrões entre parênteses): `CD_LAT` (-23.5505), `CD_LNG` (-46.6333), `CERCA_RAIO_KM` (0.5), `ATRASO_LIMITE_MIN` (15), `VELOCIDADE_PADRAO_KMH` (60).

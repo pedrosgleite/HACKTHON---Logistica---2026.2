@@ -208,6 +208,49 @@ export const openapi = {
         responses: { 200: { description: "LIBERADO com entregas PROGRAMADA" }, 422: { description: "Romaneio não conferido" } },
       },
     },
+    "/rastreio/posicao": {
+      post: {
+        tags: ["Rastreio"],
+        summary: "Recebe posição do rastreador, recalcula ETA e detecta a cerca eletrônica",
+        description:
+          "Primeira posição de ticket CRIADO → EM_DESLOCAMENTO. ETA atrasando mais que ATRASO_LIMITE_MIN → ocorrência ATRASO. " +
+          "Frota própria entrando no raio (CERCA_RAIO_KM) → entrada automática + C1 + C3; saindo → registrarSaida() (exige C2).",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["placa", "lat", "lng"],
+                properties: {
+                  placa: { type: "string", example: "ABC1D23" },
+                  lat: { type: "number", example: -23.5 },
+                  lng: { type: "number", example: -46.6333 },
+                  velocidade: { type: "number", description: "km/h" },
+                },
+              },
+            },
+          },
+        },
+        responses: { 201: { description: "Posição salva" }, 404: { description: "Veículo não cadastrado ou sem ticket aberto" }, 422: { description: "Dados inválidos" } },
+      },
+    },
+    "/tickets/{id}/eta": {
+      get: {
+        tags: ["Rastreio"],
+        summary: "ETA atual e distância até o CD",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "OK (disponivel=false se ainda não há posições)" }, 404: { description: "Ticket não encontrado" } },
+      },
+    },
+    "/tickets/{id}/posicoes": {
+      get: {
+        tags: ["Rastreio"],
+        summary: "Trajeto (posições em ordem)",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "OK" }, 404: { description: "Ticket não encontrado" } },
+      },
+    },
     "/portaria/entrada": {
       post: {
         tags: ["Portaria"],

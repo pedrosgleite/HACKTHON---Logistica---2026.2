@@ -56,7 +56,7 @@ No SDD, **a spec vem antes do código**. Cada funcionalidade tem uma spec com re
 | 1    | SPEC-07 | Análise de risco (simulada)        | B         | 06              | ⬜     |
 | 1    | SPEC-09 | Docas e fila                       | B         | 00              | ⬜     |
 | 2    | SPEC-03 | Romaneio                           | A         | 01, 02          | ✅     |
-| 2    | SPEC-05 | Rastreio, ETA e cerca eletrônica   | A         | 02              | ⬜     |
+| 2    | SPEC-05 | Rastreio, ETA e cerca eletrônica   | A         | 02              | ✅     |
 | 2    | SPEC-08 | Notificações e link do motorista   | B         | 07, 09          | ⬜     |
 | 3    | SPEC-04 | Entregas e encerramento            | A         | 03              | ⬜     |
 | 3    | SPEC-10 | Saída do veículo                   | B         | 09, contrato C2 | ⬜     |
@@ -88,11 +88,68 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 | **C4** | `registrarEvento(ticketId, tipo, descricao, dados?)`            | A          | A + B | Toda mudança relevante (linha do tempo)           |
 | **C5** | `atualizarStatusTicket(ticketId, novoStatus)`                   | A          | A + B | Validação centralizada das transições de status   |
 
+### Situação dos contratos
+
+| ID | Situação | Onde |
+| -- | -------- | ---- |
+| **C1** | ⬜ stub — retorna `{ posicaoFila: 1 }` | `src/shared/contratos/index.ts` |
+| **C2** | ✅ implementado (SPEC-03) | `src/shared/contratos/index.ts` |
+| **C3** | ⬜ stub — retorna `{ token: "stub-<ticketId>" }` | `src/shared/contratos/index.ts` |
+| **C4** | ✅ implementado (SPEC-01/02) | `src/shared/contratos/index.ts` |
+| **C5** | ✅ implementado (SPEC-02) | `src/shared/contratos/index.ts` + tabela em `src/modules/tickets/tickets.transicoes.ts` |
+
+> As assinaturas implementadas ganharam um último parâmetro **opcional** `db` (o `tx` de uma `prisma.$transaction`). Chamadas sem ele continuam funcionando.
+> `C5` ficou `atualizarStatusTicket(ticketId, novoStatus, db?, motivo?)` e `novoStatus` agora é o enum `TicketStatus`.
+
+---
+
+## 4.1 Para o Dev B — o que o Dev A já mexeu na sua área
+
+Atualizado em 18/11/2026, após SPEC-00, 01, 02, 03, 05 (A) e SPEC-06 (B). Tudo abaixo está na `main`.
+
+**Ao puxar:** rode `npx prisma generate` (ver README).
+
+### 1. C4 e C5 já funcionam — use na portaria e nas suas specs
+- `registrarEvento(ticketId, tipo, descricao, dados?, tx?)` grava o `EventoTicket`. A portaria hoje faz `tx.eventoTicket.create` direto — funciona, mas prefira o C4.
+- `atualizarStatusTicket(ticketId, novoStatus, tx?, motivo?)` valida a transição (422 se inválida, com a lista `permitidos`) e grava o evento `STATUS_ALTERADO`.
+- **A portaria ainda faz `tx.ticket.update({ status })` direto, sem passar pela validação.** Nada quebra — a tabela já aceita os caminhos que ela usa —, mas troque para o C5 (`portaria.service.ts`, linhas com `tx.ticket.update`).
+- A tabela de transições (`tickets.transicoes.ts`) foi montada a partir do PROJETO §6 **mais** os caminhos reais da portaria/cerca:
+  - `CRIADO → NA_PORTARIA` (portaria) · `NA_PORTARIA → BLOQUEADO | AGUARDANDO_MOTORISTA` (risco síncrono, sem passar por `EM_ANALISE_RISCO`)
+  - `NA_PORTARIA | EM_DESLOCAMENTO → AGUARDANDO_DOCA` (cerca, frota própria)
+  - `BLOQUEADO → EM_ANALISE_RISCO | AGUARDANDO_MOTORISTA` (reanálise da SPEC-07)
+  - `AGUARDANDO_MOTORISTA → AGUARDANDO_DOCA | EM_DOCA` · `AGUARDANDO_DOCA → EM_DOCA` · `EM_DOCA → LIBERADO_SAIDA` · `LIBERADO_SAIDA → EM_TRANSITO`
+  - Se alguma spec sua precisar de outro caminho, **adicione na tabela** (é a fonte única) e avise.
+
+### 2. C2 pronto para a SPEC-09 e SPEC-10
+- `romaneioLiberado(ticketId, tx?)` → `true` só se o ticket **tem** romaneio e todos estão `LIBERADO`/`FINALIZADO`. Ticket sem romaneio → `false`.
+
+### 3. SPEC-10: `registrarSaida()` provisória já existe — assuma ela
+- Arquivo: `src/shared/saida.ts` → `registrarSaida(ticketId, origem: "PORTARIA" | "CERCA", tx?)`.
+- Já faz: checa C2 (422 se falso) → C5 para `EM_TRANSITO` (exige ticket `LIBERADO_SAIDA`) → acesso `SAIU` + `saidaEm` → entregas `PROGRAMADA → EM_ROTA` → eventos `SAIDA_REGISTRADA`, `MONITORAMENTO_VIAGEM_INICIADO` e `MONITORAMENTO_RISCO_INICIADO`.
+- **A cerca (SPEC-05) já chama essa função.** Na SPEC-10 basta criar a rota `POST /portaria/:acessoId/saida` chamando `registrarSaida(ticketId, "PORTARIA", tx)` — e ajustar o corpo da função se quiser (mantenha a assinatura).
+
+### 4. SPEC-09 (docas): o que a cerca espera do C1
+- Na entrada pela cerca, o ticket já vai para `AGUARDANDO_DOCA` **antes** de chamar `alocarDoca(ticketId)`. Se o C1 alocar uma doca na hora, ele deve mover o ticket para `EM_DOCA` (via C5) e criar a `AlocacaoDoca`.
+- A cerca chama o C1 **fora** da transação; se ele lançar erro, vira o evento `FALHA_ALOCAR_DOCA` (a posição não é perdida).
+- **Pendente:** `POST /tickets/:id/cancelar` tira o ticket da `FilaDoca`, mas **não libera a doca** se ele estava `EM_DOCA`. Exponha uma função de liberar doca (ex.: `liberarDocaDoTicket(ticketId, tx)`) e eu chamo no cancelamento — ou chame você mesmo.
+
+### 5. SPEC-08 (notificações): o que a cerca espera do C3
+- A cerca chama `enviarLinkMotorista(ticketId, telefone)` com o telefone do **motorista do acesso**. Frota própria só tem motorista se alguém informou o condutor; sem telefone, a cerca grava o evento `LINK_MOTORISTA_PENDENTE` e não chama o C3.
+
+### 6. SPEC-07 (reanálise)
+- O critério da SPEC-02 "ticket `BLOQUEADO` corrigido pelo ADM → pedir nova análise" depende da sua rota `POST /risco/acessos/:acessoId/analisar`. A transição `BLOQUEADO → EM_ANALISE_RISCO` (e `→ AGUARDANDO_MOTORISTA`) já está liberada no C5.
+
+### 7. Outras coisas úteis que já existem
+- `GET /tickets/:id` traz acessos, análises, alocações de doca, fila, romaneios, ocorrências e a linha do tempo — dá para usar para conferir os seus fluxos.
+- `GET /painel` já lê `Doca` + `AlocacaoDoca` (aberta = `saidaEm: null`) + `FilaDoca` (ordenada por `tipo, posicao`). Se a SPEC-09 usar esses campos assim, o painel funciona sem mudar nada.
+- Códigos legíveis: `src/shared/codigos.ts` (`TK-…`, `ROM-…`) com retry em criação simultânea (`comCodigoUnico`).
+- **Seu `scripts/test-portaria.mjs` não é idempotente:** ele reaproveita o `TK-TESTE-PORTARIA`, que ficou com um acesso aberto `BLOQUEADO` de uma execução anterior, então a portaria devolve esse acesso e os passos de carreta/condutor respondem 422. A portaria em si está ok (testada com tickets novos: aprovado, bloqueado, frota própria + cerca, placa sem ticket). Sugestão: no início do script, fechar os acessos abertos do ticket de teste ou criar um ticket novo a cada execução.
+
 ---
 
 ## 5. Specs
 
-### SPEC-00 — Fundação 🟦
+### SPEC-00 — Fundação ✅
 
 **Dono:** A + B · **Fase:** 0
 
@@ -255,7 +312,7 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 ---
 
-### SPEC-05 — Rastreio, ETA e cerca eletrônica ⬜
+### SPEC-05 — Rastreio, ETA e cerca eletrônica ✅
 
 **Dono:** A · **Fase:** 2 · **Raia:** 3
 
@@ -279,10 +336,10 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 **Tarefas**
 
-- [ ] Cálculo de distância (haversine) + ETA
-- [ ] Detecção de entrada/saída da cerca (raio configurável)
-- [ ] Script `scripts/simular-rastreio` que envia posições se aproximando do CD
-- [ ] Integração com C1 e C3
+- [x] Cálculo de distância (haversine) + ETA
+- [x] Detecção de entrada/saída da cerca (raio configurável — `CERCA_RAIO_KM`)
+- [x] Script `scripts/simular-rastreio` que envia posições se aproximando do CD (`npm run simular:rastreio -- PLACA`)
+- [x] Integração com C1 e C3 (chamadas prontas; C1/C3 ainda são stubs do Dev B)
 
 ---
 
