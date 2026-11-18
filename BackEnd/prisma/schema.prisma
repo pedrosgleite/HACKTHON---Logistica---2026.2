@@ -1,0 +1,11 @@
+// Schema do ARGOS IA LOGISTIC — models serão adicionados na SPEC-00 (entidades de PROJETO.md §7)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
