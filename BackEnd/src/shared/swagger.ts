@@ -251,6 +251,53 @@ export const openapi = {
         responses: { 200: { description: "OK" }, 404: { description: "Ticket não encontrado" } },
       },
     },
+    "/entregas": {
+      get: {
+        tags: ["Entregas"],
+        summary: "Lista entregas (por romaneio ou ticket)",
+        parameters: [
+          { name: "romaneioId", in: "query", schema: { type: "string" } },
+          { name: "ticketId", in: "query", schema: { type: "string" } },
+          { name: "status", in: "query", schema: { type: "string" } },
+        ],
+        responses: { 200: { description: "OK, em ordem de sequência" }, 422: { description: "Informe romaneioId ou ticketId" } },
+      },
+    },
+    "/entregas/{id}/baixa": {
+      post: {
+        tags: ["Entregas"],
+        summary: "Registra o resultado da entrega + comprovante (POD)",
+        description:
+          "Sem `resultado`: entrega realizada (ENTREGUE, ou PARCIAL + ocorrência se volumes < previstos); exige recebedorNome, recebedorDoc, volumesEntregues e comprovanteUrl. " +
+          "Com `resultado` RECUSADA/DESTINATARIO_AUSENTE/INSUCESSO: exige motivo. Última entrega final → romaneio FINALIZADO; todos finalizados → ticket ENCERRADO.",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  resultado: { type: "string", enum: ["RECUSADA", "DESTINATARIO_AUSENTE", "INSUCESSO"] },
+                  volumesEntregues: { type: "integer" },
+                  recebedorNome: { type: "string" },
+                  recebedorDoc: { type: "string" },
+                  comprovanteUrl: { type: "string", format: "uri" },
+                  baixadaEm: { type: "string", format: "date-time" },
+                  motivo: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Baixa registrada (inclui romaneioFinalizado e ticketEncerrado)" },
+          404: { description: "Entrega não encontrada" },
+          409: { description: "Entrega já recebeu baixa" },
+          422: { description: "Entrega não está EM_ROTA, dados faltando ou volumes inválidos" },
+        },
+      },
+    },
     "/portaria/entrada": {
       post: {
         tags: ["Portaria"],

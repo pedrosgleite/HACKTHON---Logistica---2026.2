@@ -58,7 +58,7 @@ No SDD, **a spec vem antes do código**. Cada funcionalidade tem uma spec com re
 | 2    | SPEC-03 | Romaneio                           | A         | 01, 02          | ✅     |
 | 2    | SPEC-05 | Rastreio, ETA e cerca eletrônica   | A         | 02              | ✅     |
 | 2    | SPEC-08 | Notificações e link do motorista   | B         | 07, 09          | ⬜     |
-| 3    | SPEC-04 | Entregas e encerramento            | A         | 03              | ⬜     |
+| 3    | SPEC-04 | Entregas e encerramento            | A         | 03              | ✅     |
 | 3    | SPEC-10 | Saída do veículo                   | B         | 09, contrato C2 | ⬜     |
 | 4    | SPEC-11 | Fluxo ponta a ponta + demo         | A + B     | todas           | ⬜     |
 | 5    | SPEC-12 | IA no sistema                      | a definir | 11              | ⏸️     |
@@ -105,7 +105,7 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 ## 4.1 Para o Dev B — o que o Dev A já mexeu na sua área
 
-Atualizado em 18/11/2026, após SPEC-00, 01, 02, 03, 05 (A) e SPEC-06 (B). Tudo abaixo está na `main`.
+Atualizado em 18/11/2026, após SPEC-00 a 05 (A — todas concluídas) e SPEC-06 (B). Cada spec sua (07, 08, 09, 10) também tem um bloco **📍 Ponto de partida** dizendo o que já existe e o que falta.
 
 **Ao puxar:** rode `npx prisma generate` (ver README).
 
@@ -280,7 +280,7 @@ Atualizado em 18/11/2026, após SPEC-00, 01, 02, 03, 05 (A) e SPEC-06 (B). Tudo 
 
 ---
 
-### SPEC-04 — Entregas e encerramento ⬜
+### SPEC-04 — Entregas e encerramento ✅
 
 **Dono:** A · **Fase:** 3
 
@@ -304,11 +304,17 @@ Atualizado em 18/11/2026, após SPEC-00, 01, 02, 03, 05 (A) e SPEC-06 (B). Tudo 
 
 **Tarefas**
 
-- [ ] Baixa da entrega com validação
-- [ ] Finalização automática do romaneio
-- [ ] Encerramento automático do ticket
+- [x] Baixa da entrega com validação
+- [x] Finalização automática do romaneio
+- [x] Encerramento automático do ticket
 
-⏸️ **Pendente com o time:** quem baixa — motorista pelo link ou painel? (A rota serve para os dois.)
+**Como ficou a baixa** (`POST /entregas/:id/baixa`, só para entrega `EM_ROTA`):
+- Entrega realizada: `{ volumesEntregues, recebedorNome, recebedorDoc, comprovanteUrl, baixadaEm? }` → `ENTREGUE`, ou `PARCIAL` + ocorrência `DIVERGENCIA` se volumes < previstos.
+- Não realizada: `{ resultado: "RECUSADA" | "DESTINATARIO_AUSENTE" | "INSUCESSO", motivo }`.
+- `GET /entregas` aceita `romaneioId` **ou** `ticketId` (e `status`).
+- As entregas vão para `EM_ROTA` dentro da `registrarSaida()` (`src/shared/saida.ts`).
+
+⏸️ **Pendente com o time:** quem baixa — motorista pelo link ou painel? (A rota serve para os dois; se for pelo link, a SPEC-08 pode expor uma rota do link chamando `baixarEntrega()` de `src/modules/entregas/entregas.service.ts`.)
 
 ---
 
@@ -406,6 +412,14 @@ Atualizado em 18/11/2026, após SPEC-00, 01, 02, 03, 05 (A) e SPEC-06 (B). Tudo 
 - [ ] Fluxo de reprovação + notificação ADM
 - [ ] Reanálise com histórico
 
+> **📍 Ponto de partida (Dev B)** — boa parte já existe, feita junto com a SPEC-06:
+> - ✅ Regras simuladas em `src/integrations/risco/risco.service.ts` (`analisarRiscoSimulado`): CNH ausente/vencida, restrições, placa divergente (−20), reprova com score < 70.
+> - ✅ A portaria (`PATCH /portaria/:acessoId/condutor`) já roda a análise, grava `AnaliseRisco` e, na reprovação, põe acesso/ticket em `BLOQUEADO` + ocorrência `RISCO` + `Notificacao` ao ADM. O `GET /painel` já mostra a ocorrência.
+> - ⬜ **Falta:** `POST /risco/acessos/:acessoId/analisar` (reanálise) e `GET /risco/acessos/:acessoId` (histórico). Sugestão: extrair da portaria uma `analisarAcesso(acessoId, tx)` e usar nas duas.
+> - ⬜ **Falta:** usar o C5 `atualizarStatusTicket(...)` na reanálise (`BLOQUEADO → EM_ANALISE_RISCO → AGUARDANDO_MOTORISTA | BLOQUEADO` já liberado). Ao aprovar, marcar a ocorrência `RISCO` como `resolvida: true`.
+> - ⬜ **Falta:** ao aprovar, acionar o link (SPEC-08) — hoje a portaria só põe o acesso em `LINK_ENVIADO`, sem token.
+> - Troca de motorista/carreta: os `PATCH /portaria/:acessoId/carreta|condutor` recusam acesso `BLOQUEADO` (422). Libere para `BLOQUEADO` ou faça a troca na rota de reanálise.
+
 ⏸️ **Pendente com o time:** critérios reais de risco. (Por enquanto: as regras acima.)
 
 ---
@@ -440,6 +454,14 @@ Atualizado em 18/11/2026, após SPEC-00, 01, 02, 03, 05 (A) e SPEC-06 (B). Tudo 
 - [ ] Geração e validação de token
 - [ ] Confirmação → alocação de doca
 - [ ] Implementar **C3**
+
+> **📍 Ponto de partida (Dev B)**
+> - O schema já tem: `AcessoPortaria.token` (`@unique`), `tokenValidade`, `tokenUsado` e a tabela `Notificacao`.
+> - **C3** `enviarLinkMotorista(ticketId, telefone)` ainda é **stub** em `src/shared/contratos/index.ts` — troque o corpo mantendo assinatura e retorno `{ token }`.
+> - **Quem já chama o C3:** a cerca (SPEC-05), na entrada da frota própria, com o telefone do motorista do acesso (sem motorista grava `LINK_MOTORISTA_PENDENTE`). O risco aprovado (SPEC-07) também deve chamar.
+> - `POST /motorista/link/:token/confirmar` deve chamar o **C1** `alocarDoca(ticketId)`.
+> - `POST /motorista/link/:token/localizacao`: reaproveite `receberPosicao()` de `src/modules/rastreio/rastreio.service.ts` — já trata ticket `EM_TRANSITO` como monitoramento.
+> - Eventos: use o **C4** `registrarEvento(...)`.
 
 ⏸️ **Pendente com o time:** validade do link. (Por enquanto: 12 horas.)
 
@@ -477,6 +499,14 @@ Atualizado em 18/11/2026, após SPEC-00, 01, 02, 03, 05 (A) e SPEC-06 (B). Tudo 
 - [ ] Liberação + próximo da fila
 - [ ] Implementar **C1** (substituir o stub)
 
+> **📍 Ponto de partida (Dev B)**
+> - Seed pronto: 10 docas (1–4 `COLETA`, 5–10 `RECEBIMENTO`), todas `LIVRE`. Tabelas `AlocacaoDoca` (aberta = `saidaEm: null`, unique `ticketId+saidaEm`) e `FilaDoca` (unique `ticketId+tipo`).
+> - **C1** `alocarDoca(ticketId)` ainda é **stub** (retorna `{ posicaoFila: 1 }`). Troque o corpo mantendo o retorno `{ docaId?, numeroDoca?, posicaoFila? }`; o pool vem de `ticket.tipoPatio`.
+> - **Quem já chama o C1:** a cerca (SPEC-05) — o ticket já chega em `AGUARDANDO_DOCA`. Se alocar na hora, mova para `EM_DOCA` via C5 `atualizarStatusTicket(ticketId, "EM_DOCA", tx)`. A cerca chama **fora** de transação; erro vira evento `FALHA_ALOCAR_DOCA`.
+> - Status do ticket: use o C5. Liberar a doca = `EM_DOCA → LIBERADO_SAIDA` (já liberado na tabela). Na liberação, cheque o **C2** `romaneioLiberado(ticketId, tx)` (pronto).
+> - O `GET /painel` já lê `Doca` + `AlocacaoDoca` aberta + `FilaDoca` (ordem `tipo, posicao`) — usando esses campos assim, o painel funciona sem mudança.
+> - **Pendente com o Dev A:** `POST /tickets/:id/cancelar` tira da fila mas **não libera a doca**. Exponha `liberarDocaDoTicket(ticketId, tx)` e o Dev A chama no cancelamento.
+
 ⏸️ **Pendente com o time:** prioridade na fila. (Por enquanto: ordem de chegada.)
 
 ---
@@ -501,9 +531,15 @@ Atualizado em 18/11/2026, após SPEC-00, 01, 02, 03, 05 (A) e SPEC-06 (B). Tudo 
 
 **Tarefas**
 
-- [ ] Função única `registrarSaida()` usada pela portaria e pela cerca
-- [ ] Atualização de ticket, acesso e entregas
-- [ ] Eventos de início dos monitoramentos
+- [ ] Função única `registrarSaida()` usada pela portaria e pela cerca *(versão provisória já existe — ver abaixo)*
+- [ ] Atualização de ticket, acesso e entregas *(já feito na provisória)*
+- [ ] Eventos de início dos monitoramentos *(já feito na provisória)*
+
+> **📍 Ponto de partida (Dev B)** — a maior parte está pronta, falta a rota:
+> - `src/shared/saida.ts` → `registrarSaida(ticketId, "PORTARIA" | "CERCA", tx?)`, criada pelo Dev A para a cerca. Já faz: C2 (422 se falso) → C5 `EM_TRANSITO` (exige `LIBERADO_SAIDA`) → acesso `SAIU` + `saidaEm` → entregas `PROGRAMADA → EM_ROTA` → eventos `SAIDA_REGISTRADA`, `MONITORAMENTO_VIAGEM_INICIADO`, `MONITORAMENTO_RISCO_INICIADO`.
+> - A **cerca já usa** essa função e foi testada ponta a ponta (saída → entregas → encerramento na SPEC-04).
+> - ⬜ **Falta:** `POST /portaria/:acessoId/saida` chamando `prisma.$transaction(tx => registrarSaida(acesso.ticketId, "PORTARIA", tx))`. Pode ajustar o corpo da função (é sua), mantendo a assinatura.
+> - Pré-requisito: o ticket precisa estar `LIBERADO_SAIDA` (vem da liberação da doca, SPEC-09).
 
 ---
 
