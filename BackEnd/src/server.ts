@@ -11,6 +11,7 @@ import { romaneiosRouter } from "./modules/romaneios/romaneios.routes";
 import { entregasRouter } from "./modules/entregas/entregas.routes";
 import { rastreioRouter, rastreioTicketsRouter } from "./modules/rastreio/rastreio.routes";
 import { painelRouter, ticketsRouter } from "./modules/tickets/tickets.routes";
+import { docasRouter } from "./modules/docas/docas.routes";
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use("/romaneios", romaneiosRouter);
 app.use("/entregas", entregasRouter);
 app.use("/portaria", portariaRouter);
 app.use("/risco", riscoRouter);
+app.use("/docas", docasRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

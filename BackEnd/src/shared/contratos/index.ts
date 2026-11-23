@@ -24,8 +24,8 @@ export interface ResultadoAlocacaoDoca {
 
 /** C1 — Aloca uma doca para o ticket ou o coloca na fila. Chamado pela cerca eletrônica (frota própria). */
 export async function alocarDoca(ticketId: string): Promise<ResultadoAlocacaoDoca> {
-  console.warn(`[STUB C1] alocarDoca(${ticketId})`);
-  return { posicaoFila: 1 };
+  const { alocarDocaParaTicket } = await import("../../modules/docas/docas.service");
+  return alocarDocaParaTicket(ticketId);
 }
 
 /**

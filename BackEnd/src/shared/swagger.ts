@@ -341,5 +341,50 @@ export const openapi = {
         responses: { 200: { description: "Lista de acessos" }, 422: { description: "Status inválido" } },
       },
     },
+    "/docas": {
+      get: {
+        tags: ["Docas"],
+        summary: "Lista as 10 docas e suas alocações abertas",
+        responses: { 200: { description: "Docas por número" } },
+      },
+    },
+    "/docas/alocar": {
+      post: {
+        tags: ["Docas"],
+        summary: "Aloca uma doca do pool do ticket ou retorna sua posição na fila",
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["ticketId"], properties: { ticketId: { type: "string" } } } } },
+        },
+        responses: { 200: { description: "Doca alocada ou posição na fila" }, 404: { description: "Ticket não encontrado" }, 422: { description: "Ticket sem tipo de pátio ou transição inválida" } },
+      },
+    },
+    "/docas/{id}/liberar": {
+      post: {
+        tags: ["Docas"],
+        summary: "Libera a doca após conferir C2 e aloca automaticamente o primeiro da fila",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "Doca liberada e próximo da fila alocado, quando houver" }, 404: { description: "Doca não encontrada" }, 422: { description: "Doca vazia ou romaneio não liberado" } },
+      },
+    },
+    "/docas/{id}/status": {
+      patch: {
+        tags: ["Docas"],
+        summary: "Altera o status da doca",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["status"], properties: { status: { type: "string", enum: ["LIVRE", "OCUPADA", "MANUTENCAO"] } } } } },
+        },
+        responses: { 200: { description: "Status atualizado" }, 404: { description: "Doca não encontrada" }, 422: { description: "Status incompatível com a alocação" } },
+      },
+    },
+    "/docas/fila": {
+      get: {
+        tags: ["Docas"],
+        summary: "Lista a fila por pool e posição",
+        responses: { 200: { description: "Fila ordenada por tipo e posição" } },
+      },
+    },
   } as Record<string, unknown>,
 };

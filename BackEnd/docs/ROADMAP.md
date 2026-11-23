@@ -54,7 +54,7 @@ No SDD, **a spec vem antes do código**. Cada funcionalidade tem uma spec com re
 | 1    | SPEC-02 | Tickets e Painel Central           | A         | 00              | ✅     |
 | 1    | SPEC-06 | Portaria (entrada)                 | B         | 00              | ✅     |
 | 1    | SPEC-07 | Análise de risco (simulada)        | B         | 06              | ✅     |
-| 1    | SPEC-09 | Docas e fila                       | B         | 00              | ⬜     |
+| 1    | SPEC-09 | Docas e fila                       | B         | 00              | ✅     |
 | 2    | SPEC-03 | Romaneio                           | A         | 01, 02          | ✅     |
 | 2    | SPEC-05 | Rastreio, ETA e cerca eletrônica   | A         | 02              | ✅     |
 | 2    | SPEC-08 | Notificações e link do motorista   | B         | 07, 09          | ⬜     |
@@ -92,7 +92,7 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 
 | ID | Situação | Onde |
 | -- | -------- | ---- |
-| **C1** | ⬜ stub — retorna `{ posicaoFila: 1 }` | `src/shared/contratos/index.ts` |
+| **C1** | ✅ implementado (SPEC-09) | `src/shared/contratos/index.ts` |
 | **C2** | ✅ implementado (SPEC-03) | `src/shared/contratos/index.ts` |
 | **C3** | ⬜ stub — retorna `{ token: "stub-<ticketId>" }` | `src/shared/contratos/index.ts` |
 | **C4** | ✅ implementado (SPEC-01/02) | `src/shared/contratos/index.ts` |
@@ -467,7 +467,7 @@ Atualizado em 18/11/2026, após SPEC-00 a 05 (A — todas concluídas) e SPEC-06
 
 ---
 
-### SPEC-09 — Docas e fila ⬜
+### SPEC-09 — Docas e fila ✅
 
 **Dono:** B · **Fase:** 1 · **Raia:** 6
 
@@ -494,10 +494,10 @@ Atualizado em 18/11/2026, após SPEC-00 a 05 (A — todas concluídas) e SPEC-06
 
 **Tarefas**
 
-- [ ] Alocação com lock (`SELECT ... FOR UPDATE SKIP LOCKED` ou transação serializável)
-- [ ] Fila por pool
-- [ ] Liberação + próximo da fila
-- [ ] Implementar **C1** (substituir o stub)
+- [x] Alocação com lock (`SELECT ... FOR UPDATE SKIP LOCKED` ou transação serializável)
+- [x] Fila por pool
+- [x] Liberação + próximo da fila
+- [x] Implementar **C1** (substituir o stub)
 
 > **📍 Ponto de partida (Dev B)**
 > - Seed pronto: 10 docas (1–4 `COLETA`, 5–10 `RECEBIMENTO`), todas `LIVRE`. Tabelas `AlocacaoDoca` (aberta = `saidaEm: null`, unique `ticketId+saidaEm`) e `FilaDoca` (unique `ticketId+tipo`).

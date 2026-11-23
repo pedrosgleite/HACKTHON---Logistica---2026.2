@@ -73,6 +73,9 @@ export async function analisarAcesso(acessoId: string) {
         motivos: resultado.motivos,
       }, tx);
 
+      if (!acesso.motorista) {
+        throw new AppError("Acesso aprovado sem motorista informado", 422, { acessoId });
+      }
       await enviarLinkMotorista(acesso.ticketId, acesso.motorista.telefone);
     } else {
       await tx.acessoPortaria.update({

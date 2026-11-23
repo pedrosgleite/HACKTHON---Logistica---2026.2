@@ -5,6 +5,7 @@ import { comCodigoUnico, proximoCodigoTicket } from "../../shared/codigos";
 import { atualizarStatusTicket, registrarEvento } from "../../shared/contratos";
 import { STATUS_FINAIS, proximosStatus } from "./tickets.transicoes";
 import type { CancelarTicketInput, CriarTicketInput, ListarTicketsInput } from "./tickets.schemas";
+import { liberarDocaDoTicket } from "../docas/docas.service";
 
 export async function criarTicketManual(input: CriarTicketInput) {
   return comCodigoUnico(() => prisma.$transaction(async (tx) => {
@@ -78,6 +79,7 @@ export async function cancelarTicket(id: string, input: CancelarTicketInput) {
   }
 
   await prisma.$transaction(async (tx) => {
+    await liberarDocaDoTicket(id, tx);
     await atualizarStatusTicket(id, "CANCELADO", tx, input.motivo ?? "cancelado pelo painel");
     // tira o ticket de qualquer fila de doca
     await tx.filaDoca.deleteMany({ where: { ticketId: id } });
