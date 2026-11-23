@@ -1,8 +1,8 @@
 import type { AcessoStatus, TicketStatus } from "@prisma/client";
 import { AppError } from "../../shared/errors";
 import { prisma } from "../../shared/prisma";
-import { analisarRiscoSimulado } from "../../integrations/risco/risco.service";
 import type { CarretaInput, CondutorInput, EntradaInput } from "./portaria.schemas";
+import { analisarAcesso } from "../risco/risco.service";
 
 const statusTicketAberto: TicketStatus[] = [
   "CRIADO",
@@ -140,7 +140,7 @@ export async function informarCarreta(acessoId: string, input: CarretaInput) {
   });
 
   if (!acesso) throw new AppError("Acesso de portaria não encontrado", 404);
-  if (acesso.status === "SAIU" || acesso.status === "BLOQUEADO") {
+  if (acesso.status === "SAIU") {
     throw new AppError("O acesso não pode receber dados neste status", 422, { status: acesso.status });
   }
 
@@ -197,7 +197,7 @@ export async function informarCondutor(acessoId: string, input: CondutorInput) {
   });
 
   if (!acesso) throw new AppError("Acesso de portaria não encontrado", 404);
-  if (acesso.status === "SAIU" || acesso.status === "BLOQUEADO") {
+  if (acesso.status === "SAIU") {
     throw new AppError("O acesso não pode receber condutor neste status", 422, { status: acesso.status });
   }
 
@@ -208,84 +208,21 @@ export async function informarCondutor(acessoId: string, input: CondutorInput) {
     create: { nome: input.nome, cpf: input.cpf, telefone },
   });
 
-  const placaNota = acesso.ticket.notas.map((nota) => nota.placa).find(Boolean) ?? null;
-  const resultadoRisco = analisarRiscoSimulado({
-    cavaloRestrito: acesso.cavalo.restricao,
-    cavaloMotivo: acesso.cavalo.motivoRestricao,
-    carretaRestrita: acesso.carreta?.restricao ?? false,
-    carretaMotivo: acesso.carreta?.motivoRestricao,
-    motoristaRestrito: motorista.restricao,
-    motoristaMotivo: motorista.motivoRestricao,
-    cnhValidade: motorista.cnhValidade,
-    placaNota,
-    placaPortaria: normalizarPlaca(acesso.cavalo.placa),
+  await prisma.acessoPortaria.update({
+    where: { id: acessoId },
+    data: { motoristaId: motorista.id },
   });
 
-  await prisma.$transaction(async (tx) => {
-    if (resultadoRisco.status === "APROVADO") {
-      await tx.acessoPortaria.update({
-        where: { id: acessoId },
-        data: { motoristaId: motorista.id, status: "LINK_ENVIADO" },
-      });
-      await tx.ticket.update({
-        where: { id: acesso.ticketId },
-        data: { status: "AGUARDANDO_MOTORISTA" },
-      });
-    } else {
-      await tx.acessoPortaria.update({
-        where: { id: acessoId },
-        data: { motoristaId: motorista.id, status: "BLOQUEADO" },
-      });
-      await tx.ticket.update({
-        where: { id: acesso.ticketId },
-        data: { status: "BLOQUEADO" },
-      });
-      await tx.ocorrencia.create({
-        data: {
-          ticketId: acesso.ticketId,
-          tipo: "RISCO",
-          descricao: "Entrada bloqueada pela análise simulada de risco",
-          dados: { acessoId, score: resultadoRisco.score, motivos: resultadoRisco.motivos } as object,
-        },
-      });
-      await tx.notificacao.create({
-        data: {
-          ticketId: acesso.ticketId,
-          acessoId,
-          canal: "SMS",
-          destino: "ADM",
-          mensagem: `Entrada bloqueada por risco: acesso ${acessoId}, score ${resultadoRisco.score}.`,
-        },
-      });
-    }
-
-    await tx.analiseRisco.create({
-      data: {
-        ticketId: acesso.ticketId,
-        acessoId,
-        status: resultadoRisco.status,
-        score: resultadoRisco.score,
-        motivos: resultadoRisco.motivos,
-      },
-    });
-
-    await tx.eventoTicket.create({
-      data: {
-        ticketId: acesso.ticketId,
-        tipo: "CONDUTOR_INFORMADO",
-        descricao: "Condutor informado e análise de risco iniciada",
-        dados: { acessoId, cpf: motorista.cpf, statusRisco: resultadoRisco.status, score: resultadoRisco.score } as object,
-      },
-    });
+  await prisma.eventoTicket.create({
+    data: {
+      ticketId: acesso.ticketId,
+      tipo: "CONDUTOR_INFORMADO",
+      descricao: "Condutor informado e análise de risco iniciada",
+      dados: { acessoId, cpf: motorista.cpf } as object,
+    },
   });
 
-  return {
-    acessoId,
-    status: resultadoRisco.status === "APROVADO" ? "LINK_ENVIADO" : "BLOQUEADO",
-    ticketStatus: resultadoRisco.status === "APROVADO" ? "AGUARDANDO_MOTORISTA" : "BLOQUEADO",
-    analiseRisco: resultadoRisco,
-    proximoPasso: resultadoRisco.status === "APROVADO" ? "AGUARDANDO_LINK_DO_MOTORISTA" : "AGUARDANDO_CORRECAO_DO_ADM",
-  };
+  return analisarAcesso(acessoId);
 }
 
 export async function listarAcessos(status?: AcessoStatus) {

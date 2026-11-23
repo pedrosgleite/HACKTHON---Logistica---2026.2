@@ -6,6 +6,7 @@ import { errorHandler, notFoundHandler } from "./shared/errors";
 import { openapi } from "./shared/swagger";
 import { nfeRouter } from "./modules/nfe/nfe.routes";
 import { portariaRouter } from "./modules/portaria/portaria.routes";
+import { riscoRouter } from "./modules/risco/risco.routes";
 import { romaneiosRouter } from "./modules/romaneios/romaneios.routes";
 import { entregasRouter } from "./modules/entregas/entregas.routes";
 import { rastreioRouter, rastreioTicketsRouter } from "./modules/rastreio/rastreio.routes";
@@ -29,6 +30,7 @@ app.use("/painel", painelRouter);
 app.use("/romaneios", romaneiosRouter);
 app.use("/entregas", entregasRouter);
 app.use("/portaria", portariaRouter);
+app.use("/risco", riscoRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

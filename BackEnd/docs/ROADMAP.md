@@ -53,7 +53,7 @@ No SDD, **a spec vem antes do código**. Cada funcionalidade tem uma spec com re
 | 1    | SPEC-01 | Ingestão do XML e triagem          | A         | 00              | ✅     |
 | 1    | SPEC-02 | Tickets e Painel Central           | A         | 00              | ✅     |
 | 1    | SPEC-06 | Portaria (entrada)                 | B         | 00              | ✅     |
-| 1    | SPEC-07 | Análise de risco (simulada)        | B         | 06              | ⬜     |
+| 1    | SPEC-07 | Análise de risco (simulada)        | B         | 06              | ✅     |
 | 1    | SPEC-09 | Docas e fila                       | B         | 00              | ⬜     |
 | 2    | SPEC-03 | Romaneio                           | A         | 01, 02          | ✅     |
 | 2    | SPEC-05 | Rastreio, ETA e cerca eletrônica   | A         | 02              | ✅     |
@@ -384,7 +384,7 @@ Atualizado em 18/11/2026, após SPEC-00 a 05 (A — todas concluídas) e SPEC-06
 
 ---
 
-### SPEC-07 — Análise de risco (simulada) ⬜
+### SPEC-07 — Análise de risco (simulada) ✅
 
 **Dono:** B · **Fase:** 1 · **Raia:** 5
 
@@ -408,9 +408,9 @@ Atualizado em 18/11/2026, após SPEC-00 a 05 (A — todas concluídas) e SPEC-06
 
 **Tarefas**
 
-- [ ] Serviço de regras isolado em `integrations/risco` (trocável pela gerenciadora real)
-- [ ] Fluxo de reprovação + notificação ADM
-- [ ] Reanálise com histórico
+- [x] Serviço de regras isolado em `integrations/risco` (trocável pela gerenciadora real)
+- [x] Fluxo de reprovação + notificação ADM
+- [x] Reanálise com histórico
 
 > **📍 Ponto de partida (Dev B)** — boa parte já existe, feita junto com a SPEC-06:
 > - ✅ Regras simuladas em `src/integrations/risco/risco.service.ts` (`analisarRiscoSimulado`): CNH ausente/vencida, restrições, placa divergente (−20), reprova com score < 70.
