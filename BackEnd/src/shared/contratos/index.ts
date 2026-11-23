@@ -1,6 +1,6 @@
 /**
  * Contratos entre os dois devs (ROADMAP.md §4).
- * São os ÚNICOS pontos em que um módulo chama o outro. Hoje são STUBS (sempre sucesso);
+ * São os ÚNICOS pontos em que um módulo chama o outro. Contratos marcados como STUB ainda não têm integração real;
  * quem implementa substitui o corpo da função mantendo a assinatura. Não mude a assinatura sem avisar.
  *
  * | ID | Implementa | Usa   | Spec que substitui o stub |
@@ -41,10 +41,10 @@ export async function romaneioLiberado(
   return romaneios.length > 0 && romaneios.every((r) => r.status === "LIBERADO" || r.status === "FINALIZADO");
 }
 
-/** C3 — Envia (simulado) o link do motorista e devolve o token de acesso. */
+/** C3 — Envia o link simulado do motorista por SMS e WhatsApp e devolve o token de acesso. */
 export async function enviarLinkMotorista(ticketId: string, telefone: string): Promise<{ token: string }> {
-  console.warn(`[STUB C3] enviarLinkMotorista(${ticketId}, ${telefone})`);
-  return { token: `stub-${ticketId}` };
+  const { enviarLinkMotorista: enviar } = await import("../../modules/motorista/motorista.service");
+  return enviar(ticketId, telefone);
 }
 
 /**

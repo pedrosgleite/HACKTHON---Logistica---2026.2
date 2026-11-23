@@ -3,6 +3,7 @@ import { AppError } from "../../shared/errors";
 import { prisma } from "../../shared/prisma";
 import type { CarretaInput, CondutorInput, EntradaInput } from "./portaria.schemas";
 import { analisarAcesso } from "../risco/risco.service";
+import { enviarNotificacaoSimulada } from "../../integrations/notificacao/notificacao.service";
 
 const statusTicketAberto: TicketStatus[] = [
   "CRIADO",
@@ -44,12 +45,10 @@ export async function registrarEntrada(input: EntradaInput) {
   }
 
   if (!ticket) {
-    await prisma.notificacao.create({
-      data: {
-        canal: "SMS",
-        destino: "ADM",
-        mensagem: `Bloqueio de entrada: placa ${placa} não está vinculada a nenhum ticket aberto.`,
-      },
+    await enviarNotificacaoSimulada({
+      canal: "SMS",
+      destino: "ADM",
+      mensagem: `Bloqueio de entrada: placa ${placa} não está vinculada a nenhum ticket aberto.`,
     });
     throw new AppError("Placa não encontrada em ticket aberto", 409, { placa, bloqueado: true });
   }

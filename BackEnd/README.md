@@ -18,7 +18,7 @@ No painel do Neon, em **Connect**, copie duas connection strings:
 - `DATABASE_URL` → com **Connection pooling ligado** (host contém `-pooler`). Acrescente `&pgbouncer=true`.
 - `DIRECT_URL` → com pooling **desligado** (host sem `-pooler`). Usada pelas migrations.
 
-Preencha também `PORT` (padrão 3333) e `EMPRESA_CNPJ`.
+Preencha também `PORT` (padrão 3333) e `EMPRESA_CNPJ`. Para os links enviados ao motorista apontarem para outro host, configure `PUBLIC_BASE_URL` (por exemplo, a URL pública do backend); sem isso, será usado `http://localhost:<PORT>`.
 
 ## Rodar
 ```powershell
@@ -39,7 +39,8 @@ Se alguém mudou o schema e você não regenerou, o código não compila (`Prope
 Teste: `GET http://localhost:3333/health` → `{ "status": "ok" }` · Swagger: http://localhost:3333/docs
 
 ## Onde está o quê
-- `src/shared/contratos/` — contratos C1–C5 entre os devs (ROADMAP §4). C2, C4 e C5 implementados; C1 e C3 ainda stubs (Dev B)
+- `src/shared/contratos/` — contratos C1–C5 entre os devs (ROADMAP §4). C1–C5 implementados
+- `src/modules/motorista/` — link, confirmação, localização e log de notificações simuladas (SPEC-08)
 - `src/shared/saida.ts` — `registrarSaida()` **provisória** (SPEC-10 é do Dev B), já usada pela cerca
 - `src/shared/errors.ts` — `AppError` e handler no formato `{ erro, detalhes }`
 - `src/shared/swagger.ts` — documento OpenAPI (cada módulo adiciona suas rotas)

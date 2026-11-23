@@ -386,5 +386,40 @@ export const openapi = {
         responses: { 200: { description: "Fila ordenada por tipo e posição" } },
       },
     },
+    "/motorista/link/{token}": {
+      get: {
+        tags: ["Motorista"],
+        summary: "Consulta ticket e veículos vinculados ao link",
+        parameters: [{ name: "token", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "Dados para a tela do motorista" }, 404: { description: "Link não encontrado" }, 409: { description: "Link já utilizado" }, 410: { description: "Link expirado" } },
+      },
+    },
+    "/motorista/link/{token}/confirmar": {
+      post: {
+        tags: ["Motorista"],
+        summary: "Confirma o link e aloca doca ou retorna posição na fila",
+        parameters: [{ name: "token", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "Confirmação registrada e alocação retornada" }, 409: { description: "Link já utilizado ou ticket não disponível" }, 410: { description: "Link expirado" } },
+      },
+    },
+    "/motorista/link/{token}/localizacao": {
+      post: {
+        tags: ["Motorista"],
+        summary: "Registra localização do veículo terceiro durante a viagem",
+        parameters: [{ name: "token", in: "path", required: true, schema: { type: "string" } }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["placa", "lat", "lng"], properties: { placa: { type: "string" }, lat: { type: "number", minimum: -90, maximum: 90 }, lng: { type: "number", minimum: -180, maximum: 180 }, velocidade: { type: "number", minimum: 0, maximum: 200 } } } } },
+        },
+        responses: { 201: { description: "Posição registrada no monitoramento da viagem" }, 404: { description: "Link ou veículo não encontrado" }, 409: { description: "Placa não pertence ao acesso" }, 410: { description: "Link expirado" }, 422: { description: "Localização fora da viagem ou frota não terceira" } },
+      },
+    },
+    "/notificacoes": {
+      get: {
+        tags: ["Notificações"],
+        summary: "Lista o histórico das notificações simuladas",
+        responses: { 200: { description: "Notificações em ordem decrescente de envio" } },
+      },
+    },
   } as Record<string, unknown>,
 };

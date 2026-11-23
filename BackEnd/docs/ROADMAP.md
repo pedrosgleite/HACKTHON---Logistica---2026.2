@@ -57,7 +57,7 @@ No SDD, **a spec vem antes do código**. Cada funcionalidade tem uma spec com re
 | 1    | SPEC-09 | Docas e fila                       | B         | 00              | ✅     |
 | 2    | SPEC-03 | Romaneio                           | A         | 01, 02          | ✅     |
 | 2    | SPEC-05 | Rastreio, ETA e cerca eletrônica   | A         | 02              | ✅     |
-| 2    | SPEC-08 | Notificações e link do motorista   | B         | 07, 09          | ⬜     |
+| 2    | SPEC-08 | Notificações e link do motorista   | B         | 07, 09          | ✅     |
 | 3    | SPEC-04 | Entregas e encerramento            | A         | 03              | ✅     |
 | 3    | SPEC-10 | Saída do veículo                   | B         | 09, contrato C2 | ⬜     |
 | 4    | SPEC-11 | Fluxo ponta a ponta + demo         | A + B     | todas           | ⬜     |
@@ -78,7 +78,7 @@ Fase 5  IA (quando o time definir)
 
 ## 4. Contratos entre os dois devs
 
-São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura na Fase 0.** Enquanto a implementação real não existe, cada um usa um **stub** (versão falsa que sempre retorna sucesso).
+São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura na Fase 0.** Durante o desenvolvimento, um contrato pode começar como **stub** (versão falsa que sempre retorna sucesso); o quadro abaixo registra o que já foi implementado.
 
 | ID     | Função                                                          | Implementa | Usa   | Quando é chamada                                  |
 | ------ | --------------------------------------------------------------- | ---------- | ----- | ------------------------------------------------- |
@@ -94,7 +94,7 @@ São os únicos pontos em que um módulo chama o outro. **Combinem a assinatura 
 | -- | -------- | ---- |
 | **C1** | ✅ implementado (SPEC-09) | `src/shared/contratos/index.ts` |
 | **C2** | ✅ implementado (SPEC-03) | `src/shared/contratos/index.ts` |
-| **C3** | ⬜ stub — retorna `{ token: "stub-<ticketId>" }` | `src/shared/contratos/index.ts` |
+| **C3** | ✅ implementado (SPEC-08) | `src/shared/contratos/index.ts` |
 | **C4** | ✅ implementado (SPEC-01/02) | `src/shared/contratos/index.ts` |
 | **C5** | ✅ implementado (SPEC-02) | `src/shared/contratos/index.ts` + tabela em `src/modules/tickets/tickets.transicoes.ts` |
 
@@ -345,7 +345,7 @@ Atualizado em 18/11/2026, após SPEC-00 a 05 (A — todas concluídas) e SPEC-06
 - [x] Cálculo de distância (haversine) + ETA
 - [x] Detecção de entrada/saída da cerca (raio configurável — `CERCA_RAIO_KM`)
 - [x] Script `scripts/simular-rastreio` que envia posições se aproximando do CD (`npm run simular:rastreio -- PLACA`)
-- [x] Integração com C1 e C3 (chamadas prontas; C1/C3 ainda são stubs do Dev B)
+- [x] Integração com C1 e C3
 
 ---
 
@@ -417,14 +417,14 @@ Atualizado em 18/11/2026, após SPEC-00 a 05 (A — todas concluídas) e SPEC-06
 > - ✅ A portaria (`PATCH /portaria/:acessoId/condutor`) já roda a análise, grava `AnaliseRisco` e, na reprovação, põe acesso/ticket em `BLOQUEADO` + ocorrência `RISCO` + `Notificacao` ao ADM. O `GET /painel` já mostra a ocorrência.
 > - ⬜ **Falta:** `POST /risco/acessos/:acessoId/analisar` (reanálise) e `GET /risco/acessos/:acessoId` (histórico). Sugestão: extrair da portaria uma `analisarAcesso(acessoId, tx)` e usar nas duas.
 > - ⬜ **Falta:** usar o C5 `atualizarStatusTicket(...)` na reanálise (`BLOQUEADO → EM_ANALISE_RISCO → AGUARDANDO_MOTORISTA | BLOQUEADO` já liberado). Ao aprovar, marcar a ocorrência `RISCO` como `resolvida: true`.
-> - ⬜ **Falta:** ao aprovar, acionar o link (SPEC-08) — hoje a portaria só põe o acesso em `LINK_ENVIADO`, sem token.
+> - ✅ Ao aprovar, o C3 (SPEC-08) gera e envia o link com token ao motorista.
 > - Troca de motorista/carreta: os `PATCH /portaria/:acessoId/carreta|condutor` recusam acesso `BLOQUEADO` (422). Libere para `BLOQUEADO` ou faça a troca na rota de reanálise.
 
 ⏸️ **Pendente com o time:** critérios reais de risco. (Por enquanto: as regras acima.)
 
 ---
 
-### SPEC-08 — Notificações e link do motorista ⬜
+### SPEC-08 — Notificações e link do motorista ✅
 
 **Dono:** B · **Fase:** 2
 
@@ -450,20 +450,21 @@ Atualizado em 18/11/2026, após SPEC-00 a 05 (A — todas concluídas) e SPEC-06
 
 **Tarefas**
 
-- [ ] Serviço `integrations/notificacao` (simulado, trocável por Twilio/Z-API)
-- [ ] Geração e validação de token
-- [ ] Confirmação → alocação de doca
-- [ ] Implementar **C3**
+- [x] Serviço `integrations/notificacao` (simulado, trocável por Twilio/Z-API)
+- [x] Geração e validação de token
+- [x] Confirmação → alocação de doca
+- [x] Implementar **C3**
 
 > **📍 Ponto de partida (Dev B)**
 > - O schema já tem: `AcessoPortaria.token` (`@unique`), `tokenValidade`, `tokenUsado` e a tabela `Notificacao`.
-> - **C3** `enviarLinkMotorista(ticketId, telefone)` ainda é **stub** em `src/shared/contratos/index.ts` — troque o corpo mantendo assinatura e retorno `{ token }`.
-> - **Quem já chama o C3:** a cerca (SPEC-05), na entrada da frota própria, com o telefone do motorista do acesso (sem motorista grava `LINK_MOTORISTA_PENDENTE`). O risco aprovado (SPEC-07) também deve chamar.
-> - `POST /motorista/link/:token/confirmar` deve chamar o **C1** `alocarDoca(ticketId)`.
-> - `POST /motorista/link/:token/localizacao`: reaproveite `receberPosicao()` de `src/modules/rastreio/rastreio.service.ts` — já trata ticket `EM_TRANSITO` como monitoramento.
+> - **C3** `enviarLinkMotorista(ticketId, telefone)` está implementado em `src/shared/contratos/index.ts`; envia o mesmo link válido por até 12 horas via SMS e WhatsApp simulados.
+> - A cerca (SPEC-05) e a aprovação de risco (SPEC-07) chamam o C3. Sem telefone na cerca, é gravado `LINK_MOTORISTA_PENDENTE`.
+> - `POST /motorista/link/:token/confirmar` chama o **C1** `alocarDoca(ticketId)`.
+> - `POST /motorista/link/:token/localizacao` reaproveita `receberPosicao()` de `src/modules/rastreio/rastreio.service.ts` após validar acesso, frota, placa e viagem.
+> - Rotas disponíveis: `GET /motorista/link/:token`, `POST /motorista/link/:token/confirmar`, `POST /motorista/link/:token/localizacao` e `GET /notificacoes`.
 > - Eventos: use o **C4** `registrarEvento(...)`.
 
-⏸️ **Pendente com o time:** validade do link. (Por enquanto: 12 horas.)
+**Validade do link:** 12 horas.
 
 ---
 

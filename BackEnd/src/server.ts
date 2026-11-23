@@ -12,6 +12,7 @@ import { entregasRouter } from "./modules/entregas/entregas.routes";
 import { rastreioRouter, rastreioTicketsRouter } from "./modules/rastreio/rastreio.routes";
 import { painelRouter, ticketsRouter } from "./modules/tickets/tickets.routes";
 import { docasRouter } from "./modules/docas/docas.routes";
+import { motoristaRouter, notificacoesRouter } from "./modules/motorista/motorista.routes";
 
 const app = express();
 
@@ -33,6 +34,8 @@ app.use("/entregas", entregasRouter);
 app.use("/portaria", portariaRouter);
 app.use("/risco", riscoRouter);
 app.use("/docas", docasRouter);
+app.use("/motorista", motoristaRouter);
+app.use("/notificacoes", notificacoesRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

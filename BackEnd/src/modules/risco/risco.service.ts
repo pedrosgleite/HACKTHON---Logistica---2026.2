@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { analisarRiscoSimulado } from "../../integrations/risco/risco.service";
+import { enviarNotificacaoSimulada } from "../../integrations/notificacao/notificacao.service";
 import { prisma } from "../../shared/prisma";
 import { AppError } from "../../shared/errors";
 import { enviarLinkMotorista, atualizarStatusTicket, registrarEvento } from "../../shared/contratos";
@@ -24,6 +25,7 @@ export async function analisarAcesso(acessoId: string) {
   if (!acesso.motoristaId || !acesso.motorista) {
     throw new AppError("Informe o condutor antes de analisar o acesso", 422, { acessoId });
   }
+  const telefoneMotorista = acesso.motorista.telefone;
 
   const resultado = analisarRiscoSimulado({
     cavaloRestrito: acesso.cavalo.restricao,
@@ -72,11 +74,6 @@ export async function analisarAcesso(acessoId: string) {
         score: resultado.score,
         motivos: resultado.motivos,
       }, tx);
-
-      if (!acesso.motorista) {
-        throw new AppError("Acesso aprovado sem motorista informado", 422, { acessoId });
-      }
-      await enviarLinkMotorista(acesso.ticketId, acesso.motorista.telefone);
     } else {
       await tx.acessoPortaria.update({
         where: { id: acessoId },
@@ -91,15 +88,13 @@ export async function analisarAcesso(acessoId: string) {
           dados: { acessoId, score: resultado.score, motivos: resultado.motivos } as Prisma.InputJsonObject,
         },
       });
-      await tx.notificacao.create({
-        data: {
-          ticketId: acesso.ticketId,
-          acessoId,
-          canal: "SMS",
-          destino: "ADM",
-          mensagem: `Entrada bloqueada por risco: acesso ${acessoId}, score ${resultado.score}.`,
-        },
-      });
+      await enviarNotificacaoSimulada({
+        ticketId: acesso.ticketId,
+        acessoId,
+        canal: "SMS",
+        destino: "ADM",
+        mensagem: `Entrada bloqueada por risco: acesso ${acessoId}, score ${resultado.score}.`,
+      }, tx);
       await registrarEvento(acesso.ticketId, "RISCO_REPROVADO", "Análise de risco reprovada", {
         acessoId,
         score: resultado.score,
@@ -107,6 +102,10 @@ export async function analisarAcesso(acessoId: string) {
       }, tx);
     }
   });
+
+  if (resultado.status === "APROVADO") {
+    await enviarLinkMotorista(acesso.ticketId, telefoneMotorista);
+  }
 
   const acessoAtualizado = await prisma.acessoPortaria.findUnique({
     where: { id: acessoId },
@@ -119,7 +118,7 @@ export async function analisarAcesso(acessoId: string) {
     ticketStatus: acessoAtualizado?.ticket.status,
     analiseRisco: resultado,
     proximoPasso: resultado.status === "APROVADO"
-      ? "AGUARDANDO_LINK_DO_MOTORISTA"
+      ? "LINK_ENVIADO_AO_MOTORISTA"
       : "AGUARDANDO_CORRECAO_DO_ADM",
   };
 }
