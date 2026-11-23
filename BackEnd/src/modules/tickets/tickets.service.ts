@@ -81,8 +81,12 @@ export async function cancelarTicket(id: string, input: CancelarTicketInput) {
   await prisma.$transaction(async (tx) => {
     await liberarDocaDoTicket(id, tx);
     await atualizarStatusTicket(id, "CANCELADO", tx, input.motivo ?? "cancelado pelo painel");
-    // tira o ticket de qualquer fila de doca
+    // tira o ticket de qualquer fila de doca e sobe quem estava atrás dele
+    const naFila = await tx.filaDoca.findMany({ where: { ticketId: id } });
     await tx.filaDoca.deleteMany({ where: { ticketId: id } });
+    for (const item of naFila) {
+      await tx.filaDoca.updateMany({ where: { tipo: item.tipo, posicao: { gt: item.posicao } }, data: { posicao: { decrement: 1 } } });
+    }
   });
   return prisma.ticket.findUniqueOrThrow({ where: { id } });
 }

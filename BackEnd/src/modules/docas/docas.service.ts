@@ -1,6 +1,7 @@
 import type { DocaStatus, DocaTipo, Prisma } from "@prisma/client";
 import { AppError } from "../../shared/errors";
 import { prisma } from "../../shared/prisma";
+import { comRetryDeConflito } from "../../shared/transacao";
 import {
   atualizarStatusTicket,
   romaneioLiberado,
@@ -78,7 +79,7 @@ export async function listarFilaDoca() {
 }
 
 export async function alocarDocaParaTicket(ticketId: string): Promise<ResultadoAlocacaoDoca> {
-  return prisma.$transaction(async (tx) => {
+  return comRetryDeConflito(() => prisma.$transaction(async (tx) => {
     const ticket = await tx.ticket.findUnique({ where: { id: ticketId } });
     if (!ticket) throw new AppError("Ticket não encontrado", 404, { ticketId });
     if (!ticket.tipoPatio) throw new AppError("Ticket não possui tipo de pátio", 422, { ticketId });
@@ -145,11 +146,11 @@ export async function alocarDocaParaTicket(ticketId: string): Promise<ResultadoA
       tx,
     );
     return { posicaoFila: posicao };
-  }, { isolationLevel: "Serializable" });
+  }, { isolationLevel: "Serializable" }));
 }
 
 export async function liberarDoca(docaId: string) {
-  return prisma.$transaction(async (tx) => {
+  return comRetryDeConflito(() => prisma.$transaction(async (tx) => {
     const doca = await tx.doca.findUnique({
       where: { id: docaId },
       include: { alocacoes: { where: { saidaEm: null }, include: { ticket: true } } },
@@ -182,7 +183,7 @@ export async function liberarDoca(docaId: string) {
       ticketLiberado: { id: alocacao.ticketId, codigo: alocacao.ticket.codigo },
       proximo,
     };
-  }, { isolationLevel: "Serializable" });
+  }, { isolationLevel: "Serializable" }));
 }
 
 export async function atualizarStatusDoca(docaId: string, status: DocaStatus) {
