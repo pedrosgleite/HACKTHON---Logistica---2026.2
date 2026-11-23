@@ -333,6 +333,20 @@ export const openapi = {
         responses: { 200: { description: "Condutor registrado e risco analisado" }, 404: { description: "Acesso não encontrado" }, 422: { description: "Dados inválidos" } },
       },
     },
+    "/portaria/{acessoId}/saida": {
+      post: {
+        tags: ["Portaria"],
+        summary: "Registra a saída do veículo após verificar o romaneio",
+        description: "Usa registrarSaida(), compartilhada com a saída automática pela cerca. Move o ticket para EM_TRANSITO, o acesso para SAIU e as entregas liberadas para EM_ROTA.",
+        parameters: [{ name: "acessoId", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          200: { description: "Saída registrada e monitoramentos iniciados" },
+          404: { description: "Acesso não encontrado" },
+          409: { description: "Saída deste acesso já registrada" },
+          422: { description: "Ticket não liberado ou romaneio não liberado" },
+        },
+      },
+    },
     "/portaria/acessos": {
       get: {
         tags: ["Portaria"],

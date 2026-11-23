@@ -59,7 +59,7 @@ No SDD, **a spec vem antes do código**. Cada funcionalidade tem uma spec com re
 | 2    | SPEC-05 | Rastreio, ETA e cerca eletrônica   | A         | 02              | ✅     |
 | 2    | SPEC-08 | Notificações e link do motorista   | B         | 07, 09          | ✅     |
 | 3    | SPEC-04 | Entregas e encerramento            | A         | 03              | ✅     |
-| 3    | SPEC-10 | Saída do veículo                   | B         | 09, contrato C2 | ⬜     |
+| 3    | SPEC-10 | Saída do veículo                   | B         | 09, contrato C2 | ✅     |
 | 4    | SPEC-11 | Fluxo ponta a ponta + demo         | A + B     | todas           | ⬜     |
 | 5    | SPEC-12 | IA no sistema                      | a definir | 11              | ⏸️     |
 
@@ -512,7 +512,7 @@ Atualizado em 18/11/2026, após SPEC-00 a 05 (A — todas concluídas) e SPEC-06
 
 ---
 
-### SPEC-10 — Saída do veículo ⬜
+### SPEC-10 — Saída do veículo ✅
 
 **Dono:** B · **Fase:** 3 · **Raia:** 4
 
@@ -532,14 +532,14 @@ Atualizado em 18/11/2026, após SPEC-00 a 05 (A — todas concluídas) e SPEC-06
 
 **Tarefas**
 
-- [ ] Função única `registrarSaida()` usada pela portaria e pela cerca *(versão provisória já existe — ver abaixo)*
-- [ ] Atualização de ticket, acesso e entregas *(já feito na provisória)*
-- [ ] Eventos de início dos monitoramentos *(já feito na provisória)*
+- [x] Função única `registrarSaida()` usada pela portaria e pela cerca
+- [x] Atualização de ticket, acesso e entregas
+- [x] Eventos de início dos monitoramentos
 
 > **📍 Ponto de partida (Dev B)** — a maior parte está pronta, falta a rota:
 > - `src/shared/saida.ts` → `registrarSaida(ticketId, "PORTARIA" | "CERCA", tx?)`, criada pelo Dev A para a cerca. Já faz: C2 (422 se falso) → C5 `EM_TRANSITO` (exige `LIBERADO_SAIDA`) → acesso `SAIU` + `saidaEm` → entregas `PROGRAMADA → EM_ROTA` → eventos `SAIDA_REGISTRADA`, `MONITORAMENTO_VIAGEM_INICIADO`, `MONITORAMENTO_RISCO_INICIADO`.
 > - A **cerca já usa** essa função e foi testada ponta a ponta (saída → entregas → encerramento na SPEC-04).
-> - ⬜ **Falta:** `POST /portaria/:acessoId/saida` chamando `prisma.$transaction(tx => registrarSaida(acesso.ticketId, "PORTARIA", tx))`. Pode ajustar o corpo da função (é sua), mantendo a assinatura.
+> - `POST /portaria/:acessoId/saida` chama `prisma.$transaction(tx => registrarSaida(acesso.ticketId, "PORTARIA", tx))`.
 > - Pré-requisito: o ticket precisa estar `LIBERADO_SAIDA` (vem da liberação da doca, SPEC-09).
 
 ---

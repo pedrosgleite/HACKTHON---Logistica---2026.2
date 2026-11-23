@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { AcessoStatus } from "@prisma/client";
 import { carretaSchema, condutorSchema, entradaSchema, statusAcessoSchema } from "./portaria.schemas";
-import { informarCarreta, informarCondutor, listarAcessos, registrarEntrada } from "./portaria.service";
+import { informarCarreta, informarCondutor, listarAcessos, registrarEntrada, registrarSaidaPortaria } from "./portaria.service";
 
 export const portariaRouter = Router();
 
@@ -27,6 +27,14 @@ portariaRouter.patch("/:acessoId/condutor", async (req, res, next) => {
   try {
     const input = condutorSchema.parse(req.body);
     res.json(await informarCondutor(req.params.acessoId, input));
+  } catch (error) {
+    next(error);
+  }
+});
+
+portariaRouter.post("/:acessoId/saida", async (req, res, next) => {
+  try {
+    res.json(await registrarSaidaPortaria(req.params.acessoId));
   } catch (error) {
     next(error);
   }

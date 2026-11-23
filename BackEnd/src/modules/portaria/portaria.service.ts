@@ -4,6 +4,7 @@ import { prisma } from "../../shared/prisma";
 import type { CarretaInput, CondutorInput, EntradaInput } from "./portaria.schemas";
 import { analisarAcesso } from "../risco/risco.service";
 import { enviarNotificacaoSimulada } from "../../integrations/notificacao/notificacao.service";
+import { registrarSaida } from "../../shared/saida";
 
 const statusTicketAberto: TicketStatus[] = [
   "CRIADO",
@@ -222,6 +223,34 @@ export async function informarCondutor(acessoId: string, input: CondutorInput) {
   });
 
   return analisarAcesso(acessoId);
+}
+
+export async function registrarSaidaPortaria(acessoId: string) {
+  return prisma.$transaction(async (tx) => {
+    const acesso = await tx.acessoPortaria.findUnique({
+      where: { id: acessoId },
+      include: { ticket: true },
+    });
+
+    if (!acesso) throw new AppError("Acesso de portaria não encontrado", 404, { acessoId });
+    if (acesso.status === "SAIU" || acesso.saidaEm) {
+      throw new AppError("A saída deste acesso já foi registrada", 409, { acessoId });
+    }
+    if (acesso.ticket.status !== "LIBERADO_SAIDA") {
+      throw new AppError("Ticket ainda não está liberado para saída", 422, {
+        ticketId: acesso.ticketId,
+        status: acesso.ticket.status,
+      });
+    }
+
+    const saida = await registrarSaida(acesso.ticketId, "PORTARIA", tx);
+    return {
+      acessoId,
+      ticketId: acesso.ticketId,
+      ticketStatus: "EM_TRANSITO",
+      ...saida,
+    };
+  });
 }
 
 export async function listarAcessos(status?: AcessoStatus) {
