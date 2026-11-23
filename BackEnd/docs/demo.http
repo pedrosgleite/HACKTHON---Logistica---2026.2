@@ -1,0 +1,248 @@
+###############################################################################
+# ARGOS IA LOGISTIC — roteiro de demo (SPEC-11)
+#
+# Como usar (VS Code + extensão "REST Client", humao.rest-client):
+#   1. npm run demo:reset -- --confirmar   (banco limpo, docas livres)
+#   2. npm run dev
+#   3. Clique em "Send Request" acima de cada bloco, NA ORDEM.
+#      As respostas ficam salvas pelo "# @name" e os próximos blocos reaproveitam
+#      os ids ({{nome.response.body.campo}}).
+#
+# Versão automática dos mesmos cenários: npm run demo
+#
+# Atenção: a chave da NF-e é única. Os XMLs abaixo vêm de scripts/xml/ e só podem
+# ser importados UMA vez por banco — para repetir, rode o demo:reset de novo.
+###############################################################################
+
+@api = http://localhost:3333
+
+### Saúde da API
+GET {{api}}/health
+
+
+###############################################################################
+# CENÁRIO 1 — Terceiro aprovado: XML → ticket → portaria → risco → link → doca
+#             → romaneio → saída → entregas → encerrado
+###############################################################################
+
+### 1.1 Importa o XML da NF-e (recebimento, frota terceira TER3F45)
+# @name c1nota
+POST {{api}}/nfe/xml?origemSistema=SAP
+Content-Type: application/xml
+
+< ../scripts/xml/recebimento.xml
+
+### 1.2 Portaria: entrada do cavalo
+# @name c1entrada
+POST {{api}}/portaria/entrada
+Content-Type: application/json
+
+{ "placa": "TER3F45", "ticketId": "{{c1nota.response.body.ticket.id}}" }
+
+### 1.3 Portaria: carreta
+PATCH {{api}}/portaria/{{c1entrada.response.body.acessoId}}/carreta
+Content-Type: application/json
+
+{ "placa": "TCR5H67" }
+
+### 1.4 Portaria: condutor → dispara a análise de risco (APROVADO) e o link
+PATCH {{api}}/portaria/{{c1entrada.response.body.acessoId}}/condutor
+Content-Type: application/json
+
+{ "nome": "Joao da Silva", "cpf": "11144477735", "telefone": "+5511990000001" }
+
+### 1.5 Notificações simuladas (SMS + WhatsApp) — COPIE o token do link da mensagem
+GET {{api}}/notificacoes
+
+### ⬇️ cole aqui o token que aparece em ".../motorista/link/<TOKEN>"
+@token = COLE_O_TOKEN_AQUI
+
+### 1.6 Motorista abre o link
+GET {{api}}/motorista/link/{{token}}
+
+### 1.7 Motorista confirma → recebe a doca
+# @name c1doca
+POST {{api}}/motorista/link/{{token}}/confirmar
+
+### 1.8 Romaneio a partir do ticket
+# @name c1rom
+POST {{api}}/romaneios
+Content-Type: application/json
+
+{ "ticketId": "{{c1nota.response.body.ticket.id}}" }
+
+### 1.9 Conferência (volumes iguais aos da nota → CONFERIDO)
+POST {{api}}/romaneios/{{c1rom.response.body.id}}/conferir
+Content-Type: application/json
+
+{ "itens": [ { "notaFiscalId": "{{c1rom.response.body.notas[0].id}}", "volumes": {{c1rom.response.body.notas[0].volumes}} } ] }
+
+### 1.10 Libera o romaneio → gera as entregas
+# @name c1lib
+POST {{api}}/romaneios/{{c1rom.response.body.id}}/liberar
+
+### 1.11 Libera a doca (checa C2) → ticket LIBERADO_SAIDA
+POST {{api}}/docas/{{c1doca.response.body.docaId}}/liberar
+
+### 1.12 Saída pela portaria → EM_TRANSITO, entregas EM_ROTA
+POST {{api}}/portaria/{{c1entrada.response.body.acessoId}}/saida
+
+### 1.13 Motorista envia localização durante a viagem
+POST {{api}}/motorista/link/{{token}}/localizacao
+Content-Type: application/json
+
+{ "placa": "TER3F45", "lat": -23.33, "lng": -46.6333, "velocidade": 70 }
+
+### 1.14 Baixa da entrega com comprovante → romaneio FINALIZADO → ticket ENCERRADO
+POST {{api}}/entregas/{{c1lib.response.body.entregas[0].id}}/baixa
+Content-Type: application/json
+
+{ "volumesEntregues": 300, "recebedorNome": "Maria Recebedora", "recebedorDoc": "12345678900", "comprovanteUrl": "https://exemplo.com/pod/assinatura.jpg" }
+
+### 1.15 Linha do tempo completa do ticket
+GET {{api}}/tickets/{{c1nota.response.body.ticket.id}}
+
+
+###############################################################################
+# CENÁRIO 2 — Terceiro reprovado: CNH vencida → bloqueado → troca → reanálise
+# (usa um ticket manual de recebimento, já que o XML de recebimento foi usado no 1)
+###############################################################################
+
+### 2.1 Ticket manual (solicitação de frete)
+# @name c2ticket
+POST {{api}}/tickets
+Content-Type: application/json
+
+{ "tipoPatio": "RECEBIMENTO", "frota": "TERCEIRA", "observacoes": "demo cenário 2" }
+
+### 2.2 Portaria: entrada
+# @name c2entrada
+POST {{api}}/portaria/entrada
+Content-Type: application/json
+
+{ "placa": "TER3F45", "ticketId": "{{c2ticket.response.body.id}}" }
+
+### 2.3 Só cavalo
+PATCH {{api}}/portaria/{{c2entrada.response.body.acessoId}}/carreta
+Content-Type: application/json
+
+{ "somenteCavalo": true }
+
+### 2.4 Condutor com CNH vencida → REPROVADO → BLOQUEADO
+PATCH {{api}}/portaria/{{c2entrada.response.body.acessoId}}/condutor
+Content-Type: application/json
+
+{ "nome": "Marcos Souza", "cpf": "33366699957", "telefone": "+5511990000003" }
+
+### 2.5 Painel: ticket bloqueado e ocorrência RISCO aberta
+GET {{api}}/painel
+
+### 2.6 ADM troca o motorista → reanálise APROVADA → AGUARDANDO_MOTORISTA
+PATCH {{api}}/portaria/{{c2entrada.response.body.acessoId}}/condutor
+Content-Type: application/json
+
+{ "nome": "Carlos Pereira", "cpf": "22255588846", "telefone": "+5511990000002" }
+
+### 2.7 Histórico das análises
+GET {{api}}/risco/acessos/{{c2entrada.response.body.acessoId}}
+
+### 2.8 Rodar a análise de novo manualmente
+POST {{api}}/risco/acessos/{{c2entrada.response.body.acessoId}}/analisar
+
+
+###############################################################################
+# CENÁRIO 3 — Frota própria: XML → rastreio → ETA → cerca → doca → saída pela cerca
+###############################################################################
+
+### 3.1 XML de coleta (placa ABC1D23 = frota própria)
+# @name c3nota
+POST {{api}}/nfe/xml?origemSistema=SAP
+Content-Type: application/xml
+
+< ../scripts/xml/coleta.xml
+
+### 3.2 Rastreador: 10 km ao norte do CD → EM_DESLOCAMENTO
+POST {{api}}/rastreio/posicao
+Content-Type: application/json
+
+{ "placa": "ABC1D23", "lat": -23.4607, "lng": -46.6333, "velocidade": 60 }
+
+### 3.3 Rastreador: 3 km
+POST {{api}}/rastreio/posicao
+Content-Type: application/json
+
+{ "placa": "ABC1D23", "lat": -23.5236, "lng": -46.6333, "velocidade": 60 }
+
+### 3.4 ETA atual
+GET {{api}}/tickets/{{c3nota.response.body.ticket.id}}/eta
+
+### 3.5 Entra na cerca (≤ 0,5 km) → entrada automática + doca (C1)
+# @name c3cerca
+POST {{api}}/rastreio/posicao
+Content-Type: application/json
+
+{ "placa": "ABC1D23", "lat": -23.5500, "lng": -46.6333, "velocidade": 5 }
+
+### 3.6 Romaneio do ticket
+# @name c3rom
+POST {{api}}/romaneios
+Content-Type: application/json
+
+{ "ticketId": "{{c3nota.response.body.ticket.id}}" }
+
+### 3.7 Conferência
+POST {{api}}/romaneios/{{c3rom.response.body.id}}/conferir
+Content-Type: application/json
+
+{ "itens": [ { "notaFiscalId": "{{c3rom.response.body.notas[0].id}}", "volumes": {{c3rom.response.body.notas[0].volumes}} } ] }
+
+### 3.8 Liberação do romaneio
+POST {{api}}/romaneios/{{c3rom.response.body.id}}/liberar
+
+### 3.9 Libera a doca
+POST {{api}}/docas/{{c3cerca.response.body.cerca.doca.docaId}}/liberar
+
+### 3.10 Sai da cerca → saída automática → EM_TRANSITO
+POST {{api}}/rastreio/posicao
+Content-Type: application/json
+
+{ "placa": "ABC1D23", "lat": -23.5640, "lng": -46.6333, "velocidade": 40 }
+
+### 3.11 Trajeto
+GET {{api}}/tickets/{{c3nota.response.body.ticket.id}}/posicoes
+
+
+###############################################################################
+# CENÁRIO 4 — Fila de docas
+# Mais prático pelo script: npm run demo -- 4
+# (ele aprova 5 caminhões de coleta, pede as docas ao mesmo tempo, mostra o 5º
+#  na fila e libera uma doca para o 5º ser alocado automaticamente)
+###############################################################################
+
+### 4.1 Situação das 10 docas
+GET {{api}}/docas
+
+### 4.2 Fila por pool
+GET {{api}}/docas/fila
+
+
+###############################################################################
+# CENÁRIO 5 — Placa sem ticket: bloqueio + aviso ao ADM
+###############################################################################
+
+### 5.1 Entrada de placa desconhecida → 409 bloqueado
+POST {{api}}/portaria/entrada
+Content-Type: application/json
+
+{ "placa": "XXX0X00" }
+
+### 5.2 Notificação ao ADM
+GET {{api}}/notificacoes
+
+
+###############################################################################
+# Painel Central
+###############################################################################
+
+### Resumo: tickets por status, docas, fila, ocorrências abertas
+GET {{api}}/painel

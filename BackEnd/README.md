@@ -41,7 +41,9 @@ Teste: `GET http://localhost:3333/health` → `{ "status": "ok" }` · Swagger: h
 ## Onde está o quê
 - `src/shared/contratos/` — contratos C1–C5 entre os devs (ROADMAP §4). C1–C5 implementados
 - `src/modules/motorista/` — link, confirmação, localização e log de notificações simuladas (SPEC-08)
-- `src/shared/saida.ts` — `registrarSaida()` **provisória** (SPEC-10 é do Dev B), já usada pela cerca
+- `src/shared/saida.ts` — `registrarSaida()`, a mesma função de saída da portaria e da cerca (SPEC-10)
+- `src/shared/transacao.ts` — retry de transações em conflito (pedidos simultâneos de doca)
+- `scripts/demo/` — demo ponta a ponta e reset do banco (SPEC-11) · `docs/demo.http` — mesmos cenários para clicar
 - `src/shared/errors.ts` — `AppError` e handler no formato `{ erro, detalhes }`
 - `src/shared/swagger.ts` — documento OpenAPI (cada módulo adiciona suas rotas)
 - `scripts/seed.ts` + `scripts/seed-data.ts` — dados de teste
@@ -57,6 +59,26 @@ Teste: `GET http://localhost:3333/health` → `{ "status": "ok" }` · Swagger: h
 | `db:generate` | `prisma generate` |
 | `db:seed` | `tsx scripts/seed.ts` |
 | `simular:rastreio` | simulador do rastreador (ver abaixo) |
+| `demo` | roda os 5 cenários da demo pela API (ver abaixo) |
+| `demo:reset` | mostra o que seria apagado; com `-- --confirmar` zera a operação e reaplica o seed |
+
+## Demo ponta a ponta (SPEC-11)
+```powershell
+npm run demo:reset -- --confirmar   # ⚠️ apaga TODOS os tickets do banco compartilhado e reaplica o seed
+npm run dev                         # em outro terminal
+npm run demo                        # os 5 cenários, narrados; termina com código 1 se algo falhar
+npm run demo -- 1 3 --pausa=1500    # só os cenários 1 e 3, com pausa entre os passos (para apresentar)
+npm run demo -- --api=https://sua-api.onrender.com   # contra a API publicada
+```
+Cenários: **1** terceiro aprovado (XML → … → encerrado) · **2** terceiro reprovado → troca de motorista → reanálise · **3** frota própria (rastreio → cerca → doca → saída pela cerca) · **4** fila de docas · **5** placa sem ticket.
+
+Para clicar requisição por requisição: abra `docs/demo.http` no VS Code com a extensão **REST Client**.
+
+## Deploy (Render ou Railway)
+- **Build:** `npm install && npm run build` (o `postinstall` já roda o `prisma generate`)
+- **Start:** `npm start`
+- **Variáveis:** as mesmas do `.env` (`DATABASE_URL`, `DIRECT_URL`, `EMPRESA_CNPJ`, opcionais da cerca) + `PUBLIC_BASE_URL` com a URL pública da API (usada nos links do motorista). O `PORT` é definido pela plataforma.
+- As migrations já estão aplicadas no Neon; não precisa rodar nada no deploy.
 
 ## Simular o rastreio (SPEC-05)
 Com o servidor rodando, envia posições de um veículo **da frota própria** se aproximando do CD até entrar na cerca:

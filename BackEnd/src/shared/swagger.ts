@@ -355,6 +355,27 @@ export const openapi = {
         responses: { 200: { description: "Lista de acessos" }, 422: { description: "Status inválido" } },
       },
     },
+    "/risco/acessos/{acessoId}/analisar": {
+      post: {
+        tags: ["Risco"],
+        summary: "Roda (ou re-roda) a análise de risco do acesso",
+        description: "Usado após o ADM trocar motorista/carreta de um acesso BLOQUEADO. Mantém o histórico. Aprovado → AGUARDANDO_MOTORISTA + link (C3); reprovado → BLOQUEADO + ocorrência RISCO + aviso ao ADM.",
+        parameters: [{ name: "acessoId", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          200: { description: "Resultado da análise (status, score, motivos, proximoPasso)" },
+          404: { description: "Acesso não encontrado" },
+          422: { description: "Acesso sem condutor ou que já saiu" },
+        },
+      },
+    },
+    "/risco/acessos/{acessoId}": {
+      get: {
+        tags: ["Risco"],
+        summary: "Histórico de análises do acesso (mais recente primeiro)",
+        parameters: [{ name: "acessoId", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "OK" }, 404: { description: "Acesso não encontrado" } },
+      },
+    },
     "/docas": {
       get: {
         tags: ["Docas"],

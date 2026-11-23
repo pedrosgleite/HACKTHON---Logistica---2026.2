@@ -26,11 +26,17 @@ async function ticketDaPlaca(placa: string, veiculoId: string) {
   });
 }
 
-export async function receberPosicao(input: PosicaoInput) {
+/**
+ * `ticketId` opcional: quem já sabe o ticket (ex.: link do motorista) passa aqui,
+ * para não depender da busca pela placa quando o veículo tem mais de um ticket aberto.
+ */
+export async function receberPosicao(input: PosicaoInput, ticketId?: string) {
   const veiculo = await prisma.veiculo.findUnique({ where: { placa: input.placa } });
   if (!veiculo) throw new AppError("Veículo não cadastrado", 404, { placa: input.placa });
 
-  const ticket = await ticketDaPlaca(input.placa, veiculo.id);
+  const ticket = ticketId
+    ? await prisma.ticket.findFirst({ where: { id: ticketId, status: { notIn: STATUS_FINAIS } } })
+    : await ticketDaPlaca(input.placa, veiculo.id);
   if (!ticket) throw new AppError("Nenhum ticket aberto para esta placa", 404, { placa: input.placa });
 
   const cfg = configRastreio();

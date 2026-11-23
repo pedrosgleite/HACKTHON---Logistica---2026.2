@@ -15,7 +15,9 @@
     "db:generate": "prisma generate",
     "postinstall": "prisma generate",
     "db:seed": "tsx scripts/seed.ts",
-    "simular:rastreio": "tsx scripts/simular-rastreio.ts"
+    "simular:rastreio": "tsx scripts/simular-rastreio.ts",
+    "demo": "tsx scripts/demo/demo.ts",
+    "demo:reset": "tsx scripts/demo/reset.ts"
   },
   "keywords": [],
   "author": "",

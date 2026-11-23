@@ -143,7 +143,7 @@ export async function registrarLocalizacaoMotorista(token: string, input: Locali
     throw new AppError("A placa informada não pertence ao acesso vinculado", 409, { placa });
   }
 
-  return receberPosicao(input);
+  return receberPosicao(input, acesso.ticketId);
 }
 
 export async function listarNotificacoes() {

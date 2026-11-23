@@ -563,10 +563,13 @@ Atualizado em 18/11/2026, após SPEC-00 a 05 (A — todas concluídas) e SPEC-06
 
 **Tarefas**
 
-- [ ] Remover stubs
-- [ ] Arquivo `.http` (ou coleção Postman/Insomnia) com os 5 cenários
-- [ ] Script de demo + seed limpo
-- [ ] Deploy (Railway/Render) apontando para o Neon
+- [x] Remover stubs (C1–C5 todos reais)
+- [x] Arquivo `.http` (ou coleção Postman/Insomnia) com os 5 cenários → `docs/demo.http`
+- [x] Script de demo + seed limpo → `npm run demo` e `npm run demo:reset -- --confirmar`
+- [ ] Deploy (Railway/Render) apontando para o Neon — passos no README; falta criar o serviço na conta do time
+- [x] Swagger com todos os contratos (34 rotas)
+
+**Validação (23/11/2026):** `npm run demo` passou nos 5 cenários contra o Neon, sem erros no log. Durante a integração foram corrigidos: retry de conflito na alocação de docas (500 em pedidos simultâneos), timeout das transações (500 na reanálise), renumeração da fila ao cancelar e localização do link gravada no ticket certo.
 
 ---
 
